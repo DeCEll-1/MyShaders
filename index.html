@@ -1,0 +1,68 @@
+<html>
+
+<head>
+    <meta charset="UTF-8">
+    <title>Shader Demos</title>
+    <style>
+        body {
+            background-color: #121212;
+            color: #eee;
+            font-family: Arial, sans-serif;
+            padding: 2rem;
+        }
+
+        h1 {
+            color: #ff9800;
+        }
+
+        ul {
+            list-style: none;
+            padding-left: 0;
+        }
+
+        li {
+            margin: 0.5rem 0;
+        }
+
+        a {
+            color: #03a9f4;
+            text-decoration: none;
+            font-weight: bold;
+        }
+
+        a:hover {
+            color: #ff9800;
+        }
+    </style>
+</head>
+
+<body>
+    <h1>Shader Demos</h1>
+    <ul id="shader-list"></ul>
+
+    <script>
+        const user = 'DeCEll-1';
+        const repo = 'MyShaders';
+
+        // Fetch the root repo contents
+        fetch(`https://api.github.com/repos/${user}/${repo}/contents/`)
+            .then(res => res.json())
+            .then(items => {
+                const list = document.getElementById('shader-list');
+
+                // Filter only folders
+                items.filter(item => item.type === 'dir').forEach(folder => {
+                    // Create a link to the index.html inside the folder
+                    const li = document.createElement('li');
+                    const a = document.createElement('a');
+                    a.href = `${folder.name}/index.html`;
+                    a.textContent = folder.name;
+                    li.appendChild(a);
+                    list.appendChild(li);
+                });
+            })
+            .catch(err => console.error(err));
+    </script>
+</body>
+
+</html>

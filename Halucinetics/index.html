@@ -1,0 +1,3912 @@
+<head>
+    <style>
+        html,
+        body {
+            margin: 0;
+            padding: 0;
+            width: 100%;
+            height: 100%;
+            display: block;
+        }
+
+        #canvas {
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            text-align: center;
+            position: fixed;
+            position: relative;
+        }
+
+        .error {
+            font-family: Consolas;
+            font-size: 1.2em;
+            color: black;
+            box-sizing: border-box;
+            background-color: lightcoral;
+            border-radius: 2px;
+            border-color: lightblue;
+            border-width: thin;
+            border-style: solid;
+            line-height: 1.4em;
+            cursor: pointer;
+        }
+
+        .error:hover {
+            color: black;
+            background-color: brown;
+            border-color: blue;
+        }
+
+        #message {
+            font-family: Consolas;
+            font-size: 1.2em;
+            color: #ccc;
+            background-color: black;
+            font-weight: bold;
+            z-index: 2;
+            position: absolute;
+        }
+
+        #dat_gui_container {
+            position: absolute;
+            left: 0px;
+            /* position inside relatively positioned parent */
+            top: 0px;
+            z-index: 3;
+            /* adjust as needed */
+        }
+
+        /* Pause Button Style */
+
+        .rec_base {
+            position: absolute;
+            border: none;
+            right: 0px;
+            padding: 26px;
+            text-align: center;
+            text-decoration: none;
+            font-size: 26px;
+            border-radius: 8px;
+            margin: 8px;
+            transform: translateX(0%);
+            z-index: 1;
+        }
+
+        .rec_base:nth-of-type(2) {
+            top: 60px;
+        }
+
+        /* Screenshot Button Style */
+
+        /* Record Button Style */
+
+        /* Reload Button Style */
+    </style>
+</head>
+
+<body>
+    <div id="message"></div>
+    <div id="dat_gui_container"></div>
+    <div id="container">
+        <!-- Pause Element -->
+    </div>
+    <!-- Screenshot Element -->
+    <!-- Record Element -->
+    <!-- Reload Element -->
+</body>
+<script src="https://ajax.googleapis.com/ajax/libs/jquery/3.4.1/jquery.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/110/three.min.js"></script>
+<!-- Stats.js -->
+<!-- <script src='https://cdnjs.cloudflare.com/ajax/libs/stats.js/r16/Stats.min.js' onload="
+let stats = new Stats();
+compileTimePanel = stats.addPanel(new Stats.Panel('CT MS', '#ff8', '#221'));
+stats.showPanel(1);
+document.body.appendChild(stats.domElement);
+requestAnimationFrame(function loop() {
+    stats.update();
+    requestAnimationFrame(loop);
+});
+"></script> -->
+<!-- dat.gui -->
+
+<canvas id="canvas"></canvas>
+
+<!-- Shaders -->
+<script id='d:/Github/MyShaders/lygia/math/mod289.glsl' type='x-shader/x-fragment'>#version 300 es
+    precision highp float;
+    uniform vec3        iResolution;
+uniform float       iTime;
+uniform float       iTimeDelta;
+uniform int         iFrame;
+uniform vec4        iDate;
+uniform vec3        iChannelResolution[10];
+uniform vec4        iMouse;
+uniform vec4        iMouseButton;
+uniform mat4        iViewMatrix;
+uniform sampler2D   iChannel0;
+uniform sampler2D   iChannel1;
+uniform sampler2D   iChannel2;
+uniform sampler2D   iChannel3;
+uniform sampler2D   iChannel4;
+uniform sampler2D   iChannel5;
+uniform sampler2D   iChannel6;
+uniform sampler2D   iChannel7;
+uniform sampler2D   iChannel8;
+uniform sampler2D   iChannel9;
+uniform sampler2D   iKeyboard;
+uniform float       iSampleRate;
+
+#define iGlobalTime iTime
+#define iGlobalFrame iFrame
+
+#define SHADER_TOY
+
+    /*
+contributors: [Stefan Gustavson, Ian McEwan]
+description: modulus of 289
+use: <float|vec2|vec3|vec4> mod289(<float|vec2|vec3|vec4> x)
+*/
+
+#ifndef FNC_MOD289
+#define FNC_MOD289
+
+float mod289(const in float x) { return x - floor(x * (1. / 289.)) * 289.; }
+vec2 mod289(const in vec2 x) { return x - floor(x * (1. / 289.)) * 289.; }
+vec3 mod289(const in vec3 x) { return x - floor(x * (1. / 289.)) * 289.; }
+vec4 mod289(const in vec4 x) { return x - floor(x * (1. / 289.)) * 289.; }
+
+#endif
+
+    void main() {}
+</script>
+<script id='d:/Github/MyShaders/lygia/math/permute.glsl' type='x-shader/x-fragment'>#version 300 es
+    precision highp float;
+    uniform vec3        iResolution;
+uniform float       iTime;
+uniform float       iTimeDelta;
+uniform int         iFrame;
+uniform vec4        iDate;
+uniform vec3        iChannelResolution[10];
+uniform vec4        iMouse;
+uniform vec4        iMouseButton;
+uniform mat4        iViewMatrix;
+uniform sampler2D   iChannel0;
+uniform sampler2D   iChannel1;
+uniform sampler2D   iChannel2;
+uniform sampler2D   iChannel3;
+uniform sampler2D   iChannel4;
+uniform sampler2D   iChannel5;
+uniform sampler2D   iChannel6;
+uniform sampler2D   iChannel7;
+uniform sampler2D   iChannel8;
+uniform sampler2D   iChannel9;
+uniform sampler2D   iKeyboard;
+uniform float       iSampleRate;
+
+#define iGlobalTime iTime
+#define iGlobalFrame iFrame
+
+#define SHADER_TOY
+
+    /*
+contributors: [Stefan Gustavson, Ian McEwan]
+description: modulus of 289
+use: <float|vec2|vec3|vec4> mod289(<float|vec2|vec3|vec4> x)
+*/
+
+#ifndef FNC_MOD289
+#define FNC_MOD289
+
+float mod289(const in float x) { return x - floor(x * (1. / 289.)) * 289.; }
+vec2 mod289(const in vec2 x) { return x - floor(x * (1. / 289.)) * 289.; }
+vec3 mod289(const in vec3 x) { return x - floor(x * (1. / 289.)) * 289.; }
+vec4 mod289(const in vec4 x) { return x - floor(x * (1. / 289.)) * 289.; }
+
+#endif
+
+
+/*
+contributors: [Stefan Gustavson, Ian McEwan]
+description: permute
+use: <float|vec2|vec3|vec4> permute(<float|vec2|vec3|vec4> x)
+examples:
+    - https://raw.githubusercontent.com/patriciogonzalezvivo/lygia_examples/main/math_functions.frag
+*/
+
+#ifndef FNC_PERMUTE
+#define FNC_PERMUTE
+
+float permute(const in float v) { return mod289(((v * 34.0) + 1.0) * v); }
+vec2 permute(const in vec2 v) { return mod289(((v * 34.0) + 1.0) * v); }
+vec3 permute(const in vec3 v) { return mod289(((v * 34.0) + 1.0) * v); }
+vec4 permute(const in vec4 v) { return mod289(((v * 34.0) + 1.0) * v); }
+
+#endif
+
+    void main() {}
+</script>
+<script id='d:/Github/MyShaders/lygia/math/taylorInvSqrt.glsl' type='x-shader/x-fragment'>#version 300 es
+    precision highp float;
+    uniform vec3        iResolution;
+uniform float       iTime;
+uniform float       iTimeDelta;
+uniform int         iFrame;
+uniform vec4        iDate;
+uniform vec3        iChannelResolution[10];
+uniform vec4        iMouse;
+uniform vec4        iMouseButton;
+uniform mat4        iViewMatrix;
+uniform sampler2D   iChannel0;
+uniform sampler2D   iChannel1;
+uniform sampler2D   iChannel2;
+uniform sampler2D   iChannel3;
+uniform sampler2D   iChannel4;
+uniform sampler2D   iChannel5;
+uniform sampler2D   iChannel6;
+uniform sampler2D   iChannel7;
+uniform sampler2D   iChannel8;
+uniform sampler2D   iChannel9;
+uniform sampler2D   iKeyboard;
+uniform float       iSampleRate;
+
+#define iGlobalTime iTime
+#define iGlobalFrame iFrame
+
+#define SHADER_TOY
+
+    /*
+contributors: [Stefan Gustavson, Ian McEwan]
+description: Fast, accurate inverse square root. 
+use: <float|vec2|vec3|vec4> taylorInvSqrt(<float|vec2|vec3|vec4> x)
+*/
+
+#ifndef FNC_TAYLORINVSQRT
+#define FNC_TAYLORINVSQRT
+float taylorInvSqrt(in float r) { return 1.79284291400159 - 0.85373472095314 * r; }
+vec2 taylorInvSqrt(in vec2 r) { return 1.79284291400159 - 0.85373472095314 * r; }
+vec3 taylorInvSqrt(in vec3 r) { return 1.79284291400159 - 0.85373472095314 * r; }
+vec4 taylorInvSqrt(in vec4 r) { return 1.79284291400159 - 0.85373472095314 * r; }
+#endif
+    void main() {}
+</script>
+<script id='d:/Github/MyShaders/lygia/math/grad4.glsl' type='x-shader/x-fragment'>#version 300 es
+    precision highp float;
+    uniform vec3        iResolution;
+uniform float       iTime;
+uniform float       iTimeDelta;
+uniform int         iFrame;
+uniform vec4        iDate;
+uniform vec3        iChannelResolution[10];
+uniform vec4        iMouse;
+uniform vec4        iMouseButton;
+uniform mat4        iViewMatrix;
+uniform sampler2D   iChannel0;
+uniform sampler2D   iChannel1;
+uniform sampler2D   iChannel2;
+uniform sampler2D   iChannel3;
+uniform sampler2D   iChannel4;
+uniform sampler2D   iChannel5;
+uniform sampler2D   iChannel6;
+uniform sampler2D   iChannel7;
+uniform sampler2D   iChannel8;
+uniform sampler2D   iChannel9;
+uniform sampler2D   iKeyboard;
+uniform float       iSampleRate;
+
+#define iGlobalTime iTime
+#define iGlobalFrame iFrame
+
+#define SHADER_TOY
+
+    /*
+contributors: [Stefan Gustavson, Ian McEwan]
+description: grad4, used for snoise(vec4 v)
+use: grad4(<float> j, <vec4> ip)
+*/
+
+#ifndef FNC_GRAD4
+#define FNC_GRAD4
+vec4 grad4(float j, vec4 ip) {
+    const vec4 ones = vec4(1.0, 1.0, 1.0, -1.0);
+    vec4 p,s;
+    p.xyz = floor( fract (vec3(j) * ip.xyz) * 7.0) * ip.z - 1.0;
+    p.w = 1.5 - dot(abs(p.xyz), ones.xyz);
+    s = vec4(lessThan(p, vec4(0.0)));
+    p.xyz = p.xyz + (s.xyz*2.0 - 1.0) * s.www;
+    return p;
+}
+#endif
+
+    void main() {}
+</script>
+<script id='d:/Github/MyShaders/lygia/generative/snoise.glsl' type='x-shader/x-fragment'>#version 300 es
+    precision highp float;
+    uniform vec3        iResolution;
+uniform float       iTime;
+uniform float       iTimeDelta;
+uniform int         iFrame;
+uniform vec4        iDate;
+uniform vec3        iChannelResolution[10];
+uniform vec4        iMouse;
+uniform vec4        iMouseButton;
+uniform mat4        iViewMatrix;
+uniform sampler2D   iChannel0;
+uniform sampler2D   iChannel1;
+uniform sampler2D   iChannel2;
+uniform sampler2D   iChannel3;
+uniform sampler2D   iChannel4;
+uniform sampler2D   iChannel5;
+uniform sampler2D   iChannel6;
+uniform sampler2D   iChannel7;
+uniform sampler2D   iChannel8;
+uniform sampler2D   iChannel9;
+uniform sampler2D   iKeyboard;
+uniform float       iSampleRate;
+
+#define iGlobalTime iTime
+#define iGlobalFrame iFrame
+
+#define SHADER_TOY
+
+    /*
+contributors: [Stefan Gustavson, Ian McEwan]
+description: modulus of 289
+use: <float|vec2|vec3|vec4> mod289(<float|vec2|vec3|vec4> x)
+*/
+
+#ifndef FNC_MOD289
+#define FNC_MOD289
+
+float mod289(const in float x) { return x - floor(x * (1. / 289.)) * 289.; }
+vec2 mod289(const in vec2 x) { return x - floor(x * (1. / 289.)) * 289.; }
+vec3 mod289(const in vec3 x) { return x - floor(x * (1. / 289.)) * 289.; }
+vec4 mod289(const in vec4 x) { return x - floor(x * (1. / 289.)) * 289.; }
+
+#endif
+
+/*
+contributors: [Stefan Gustavson, Ian McEwan]
+description: modulus of 289
+use: <float|vec2|vec3|vec4> mod289(<float|vec2|vec3|vec4> x)
+*/
+
+#ifndef FNC_MOD289
+#define FNC_MOD289
+
+float mod289(const in float x) { return x - floor(x * (1. / 289.)) * 289.; }
+vec2 mod289(const in vec2 x) { return x - floor(x * (1. / 289.)) * 289.; }
+vec3 mod289(const in vec3 x) { return x - floor(x * (1. / 289.)) * 289.; }
+vec4 mod289(const in vec4 x) { return x - floor(x * (1. / 289.)) * 289.; }
+
+#endif
+
+
+/*
+contributors: [Stefan Gustavson, Ian McEwan]
+description: permute
+use: <float|vec2|vec3|vec4> permute(<float|vec2|vec3|vec4> x)
+examples:
+    - https://raw.githubusercontent.com/patriciogonzalezvivo/lygia_examples/main/math_functions.frag
+*/
+
+#ifndef FNC_PERMUTE
+#define FNC_PERMUTE
+
+float permute(const in float v) { return mod289(((v * 34.0) + 1.0) * v); }
+vec2 permute(const in vec2 v) { return mod289(((v * 34.0) + 1.0) * v); }
+vec3 permute(const in vec3 v) { return mod289(((v * 34.0) + 1.0) * v); }
+vec4 permute(const in vec4 v) { return mod289(((v * 34.0) + 1.0) * v); }
+
+#endif
+
+/*
+contributors: [Stefan Gustavson, Ian McEwan]
+description: Fast, accurate inverse square root. 
+use: <float|vec2|vec3|vec4> taylorInvSqrt(<float|vec2|vec3|vec4> x)
+*/
+
+#ifndef FNC_TAYLORINVSQRT
+#define FNC_TAYLORINVSQRT
+float taylorInvSqrt(in float r) { return 1.79284291400159 - 0.85373472095314 * r; }
+vec2 taylorInvSqrt(in vec2 r) { return 1.79284291400159 - 0.85373472095314 * r; }
+vec3 taylorInvSqrt(in vec3 r) { return 1.79284291400159 - 0.85373472095314 * r; }
+vec4 taylorInvSqrt(in vec4 r) { return 1.79284291400159 - 0.85373472095314 * r; }
+#endif
+/*
+contributors: [Stefan Gustavson, Ian McEwan]
+description: grad4, used for snoise(vec4 v)
+use: grad4(<float> j, <vec4> ip)
+*/
+
+#ifndef FNC_GRAD4
+#define FNC_GRAD4
+vec4 grad4(float j, vec4 ip) {
+    const vec4 ones = vec4(1.0, 1.0, 1.0, -1.0);
+    vec4 p,s;
+    p.xyz = floor( fract (vec3(j) * ip.xyz) * 7.0) * ip.z - 1.0;
+    p.w = 1.5 - dot(abs(p.xyz), ones.xyz);
+    s = vec4(lessThan(p, vec4(0.0)));
+    p.xyz = p.xyz + (s.xyz*2.0 - 1.0) * s.www;
+    return p;
+}
+#endif
+
+
+/*
+contributors: [Stefan Gustavson, Ian McEwan]
+description: Simplex Noise https://github.com/stegu/webgl-noise
+use: snoise(<vec2|vec3|vec4> pos)
+license: |
+    Copyright 2021-2023 by Stefan Gustavson and Ian McEwan.
+    Published under the terms of the MIT license:
+    https://opensource.org/license/mit/
+examples:
+    - /shaders/generative_snoise.frag
+*/
+
+#ifndef FNC_SNOISE
+#define FNC_SNOISE
+float snoise(in vec2 v) {
+    const vec4 C = vec4(0.211324865405187,  // (3.0-sqrt(3.0))/6.0
+                        0.366025403784439,  // 0.5*(sqrt(3.0)-1.0)
+                        -0.577350269189626,  // -1.0 + 2.0 * C.x
+                        0.024390243902439); // 1.0 / 41.0
+    // First corner
+    vec2 i  = floor(v + dot(v, C.yy) );
+    vec2 x0 = v -   i + dot(i, C.xx);
+
+    // Other corners
+    vec2 i1;
+    //i1.x = step( x0.y, x0.x ); // x0.x > x0.y ? 1.0 : 0.0
+    //i1.y = 1.0 - i1.x;
+    i1 = (x0.x > x0.y) ? vec2(1.0, 0.0) : vec2(0.0, 1.0);
+    // x0 = x0 - 0.0 + 0.0 * C.xx ;
+    // x1 = x0 - i1 + 1.0 * C.xx ;
+    // x2 = x0 - 1.0 + 2.0 * C.xx ;
+    vec4 x12 = x0.xyxy + C.xxzz;
+    x12.xy -= i1;
+
+    // Permutations
+    i = mod289(i); // Avoid truncation effects in permutation
+    vec3 p = permute( permute( i.y + vec3(0.0, i1.y, 1.0 ))
+    + i.x + vec3(0.0, i1.x, 1.0 ));
+
+    vec3 m = max(0.5 - vec3(dot(x0,x0), dot(x12.xy,x12.xy), dot(x12.zw,x12.zw)), 0.0);
+    m = m*m ;
+    m = m*m ;
+
+    // Gradients: 41 points uniformly over a line, mapped onto a diamond.
+    // The ring size 17*17 = 289 is close to a multiple of 41 (41*7 = 287)
+
+    vec3 x = 2.0 * fract(p * C.www) - 1.0;
+    vec3 h = abs(x) - 0.5;
+    vec3 ox = floor(x + 0.5);
+    vec3 a0 = x - ox;
+
+    // Normalise gradients implicitly by scaling m
+    // Approximation of: m *= inversesqrt( a0*a0 + h*h );
+    m *= 1.79284291400159 - 0.85373472095314 * ( a0*a0 + h*h );
+
+    // Compute final noise value at P
+    vec3 g;
+    g.x  = a0.x  * x0.x  + h.x  * x0.y;
+    g.yz = a0.yz * x12.xz + h.yz * x12.yw;
+    return 130.0 * dot(m, g);
+}
+
+
+float snoise(in vec3 v) {
+    const vec2  C = vec2(1.0/6.0, 1.0/3.0) ;
+    const vec4  D = vec4(0.0, 0.5, 1.0, 2.0);
+
+    // First corner
+    vec3 i  = floor(v + dot(v, C.yyy) );
+    vec3 x0 =   v - i + dot(i, C.xxx) ;
+
+    // Other corners
+    vec3 g = step(x0.yzx, x0.xyz);
+    vec3 l = 1.0 - g;
+    vec3 i1 = min( g.xyz, l.zxy );
+    vec3 i2 = max( g.xyz, l.zxy );
+
+    //   x0 = x0 - 0.0 + 0.0 * C.xxx;
+    //   x1 = x0 - i1  + 1.0 * C.xxx;
+    //   x2 = x0 - i2  + 2.0 * C.xxx;
+    //   x3 = x0 - 1.0 + 3.0 * C.xxx;
+    vec3 x1 = x0 - i1 + C.xxx;
+    vec3 x2 = x0 - i2 + C.yyy; // 2.0*C.x = 1/3 = C.y
+    vec3 x3 = x0 - D.yyy;      // -1.0+3.0*C.x = -0.5 = -D.y
+
+    // Permutations
+    i = mod289(i);
+    vec4 p = permute( permute( permute(
+                i.z + vec4(0.0, i1.z, i2.z, 1.0 ))
+            + i.y + vec4(0.0, i1.y, i2.y, 1.0 ))
+            + i.x + vec4(0.0, i1.x, i2.x, 1.0 ));
+
+    // Gradients: 7x7 points over a square, mapped onto an octahedron.
+    // The ring size 17*17 = 289 is close to a multiple of 49 (49*6 = 294)
+    float n_ = 0.142857142857; // 1.0/7.0
+    vec3  ns = n_ * D.wyz - D.xzx;
+
+    vec4 j = p - 49.0 * floor(p * ns.z * ns.z);  //  mod(p,7*7)
+
+    vec4 x_ = floor(j * ns.z);
+    vec4 y_ = floor(j - 7.0 * x_ );    // mod(j,N)
+
+    vec4 x = x_ *ns.x + ns.yyyy;
+    vec4 y = y_ *ns.x + ns.yyyy;
+    vec4 h = 1.0 - abs(x) - abs(y);
+
+    vec4 b0 = vec4( x.xy, y.xy );
+    vec4 b1 = vec4( x.zw, y.zw );
+
+    //vec4 s0 = vec4(lessThan(b0,0.0))*2.0 - 1.0;
+    //vec4 s1 = vec4(lessThan(b1,0.0))*2.0 - 1.0;
+    vec4 s0 = floor(b0)*2.0 + 1.0;
+    vec4 s1 = floor(b1)*2.0 + 1.0;
+    vec4 sh = -step(h, vec4(0.0));
+
+    vec4 a0 = b0.xzyw + s0.xzyw*sh.xxyy ;
+    vec4 a1 = b1.xzyw + s1.xzyw*sh.zzww ;
+
+    vec3 p0 = vec3(a0.xy,h.x);
+    vec3 p1 = vec3(a0.zw,h.y);
+    vec3 p2 = vec3(a1.xy,h.z);
+    vec3 p3 = vec3(a1.zw,h.w);
+
+    //Normalise gradients
+    vec4 norm = taylorInvSqrt(vec4(dot(p0,p0), dot(p1,p1), dot(p2, p2), dot(p3,p3)));
+    p0 *= norm.x;
+    p1 *= norm.y;
+    p2 *= norm.z;
+    p3 *= norm.w;
+
+    // Mix final noise value
+    vec4 m = max(0.6 - vec4(dot(x0,x0), dot(x1,x1), dot(x2,x2), dot(x3,x3)), 0.0);
+    m = m * m;
+    return 42.0 * dot( m*m, vec4( dot(p0,x0), dot(p1,x1),
+                                dot(p2,x2), dot(p3,x3) ) );
+}
+
+float snoise(in vec4 v) {
+    const vec4  C = vec4( 0.138196601125011,  // (5 - sqrt(5))/20  G4
+                        0.276393202250021,  // 2 * G4
+                        0.414589803375032,  // 3 * G4
+                        -0.447213595499958); // -1 + 4 * G4
+
+    // First corner
+    vec4 i  = floor(v + dot(v, vec4(.309016994374947451)) ); // (sqrt(5) - 1)/4
+    vec4 x0 = v -   i + dot(i, C.xxxx);
+
+    // Other corners
+
+    // Rank sorting originally contributed by Bill Licea-Kane, AMD (formerly ATI)
+    vec4 i0;
+    vec3 isX = step( x0.yzw, x0.xxx );
+    vec3 isYZ = step( x0.zww, x0.yyz );
+    //  i0.x = dot( isX, vec3( 1.0 ) );
+    i0.x = isX.x + isX.y + isX.z;
+    i0.yzw = 1.0 - isX;
+    //  i0.y += dot( isYZ.xy, vec2( 1.0 ) );
+    i0.y += isYZ.x + isYZ.y;
+    i0.zw += 1.0 - isYZ.xy;
+    i0.z += isYZ.z;
+    i0.w += 1.0 - isYZ.z;
+
+    // i0 now contains the unique values 0,1,2,3 in each channel
+    vec4 i3 = clamp( i0, 0.0, 1.0 );
+    vec4 i2 = clamp( i0-1.0, 0.0, 1.0 );
+    vec4 i1 = clamp( i0-2.0, 0.0, 1.0 );
+
+    //  x0 = x0 - 0.0 + 0.0 * C.xxxx
+    //  x1 = x0 - i1  + 1.0 * C.xxxx
+    //  x2 = x0 - i2  + 2.0 * C.xxxx
+    //  x3 = x0 - i3  + 3.0 * C.xxxx
+    //  x4 = x0 - 1.0 + 4.0 * C.xxxx
+    vec4 x1 = x0 - i1 + C.xxxx;
+    vec4 x2 = x0 - i2 + C.yyyy;
+    vec4 x3 = x0 - i3 + C.zzzz;
+    vec4 x4 = x0 + C.wwww;
+
+    // Permutations
+    i = mod289(i);
+    float j0 = permute( permute( permute( permute(i.w) + i.z) + i.y) + i.x);
+    vec4 j1 = permute( permute( permute( permute (
+                i.w + vec4(i1.w, i2.w, i3.w, 1.0 ))
+            + i.z + vec4(i1.z, i2.z, i3.z, 1.0 ))
+            + i.y + vec4(i1.y, i2.y, i3.y, 1.0 ))
+            + i.x + vec4(i1.x, i2.x, i3.x, 1.0 ));
+
+    // Gradients: 7x7x6 points over a cube, mapped onto a 4-cross polytope
+    // 7*7*6 = 294, which is close to the ring size 17*17 = 289.
+    vec4 ip = vec4(1.0/294.0, 1.0/49.0, 1.0/7.0, 0.0) ;
+
+    vec4 p0 = grad4(j0,   ip);
+    vec4 p1 = grad4(j1.x, ip);
+    vec4 p2 = grad4(j1.y, ip);
+    vec4 p3 = grad4(j1.z, ip);
+    vec4 p4 = grad4(j1.w, ip);
+
+    // Normalise gradients
+    vec4 norm = taylorInvSqrt(vec4(dot(p0,p0), dot(p1,p1), dot(p2, p2), dot(p3,p3)));
+    p0 *= norm.x;
+    p1 *= norm.y;
+    p2 *= norm.z;
+    p3 *= norm.w;
+    p4 *= taylorInvSqrt(dot(p4,p4));
+
+    // Mix contributions from the five corners
+    vec3 m0 = max(0.6 - vec3(dot(x0,x0), dot(x1,x1), dot(x2,x2)), 0.0);
+    vec2 m1 = max(0.6 - vec2(dot(x3,x3), dot(x4,x4)            ), 0.0);
+    m0 = m0 * m0;
+    m1 = m1 * m1;
+    return 49.0 * ( dot(m0*m0, vec3( dot( p0, x0 ), dot( p1, x1 ), dot( p2, x2 )))
+                + dot(m1*m1, vec2( dot( p3, x3 ), dot( p4, x4 ) ) ) ) ;
+}
+
+vec2 snoise2( vec2 x ){
+    float s  = snoise(vec2( x ));
+    float s1 = snoise(vec2( x.y - 19.1, x.x + 47.2 ));
+    return vec2( s , s1 );
+}
+
+vec3 snoise3( vec3 x ){
+    float s  = snoise(vec3( x ));
+    float s1 = snoise(vec3( x.y - 19.1 , x.z + 33.4 , x.x + 47.2 ));
+    float s2 = snoise(vec3( x.z + 74.2 , x.x - 124.5 , x.y + 99.4 ));
+    return vec3( s , s1 , s2 );
+}
+
+vec3 snoise3( vec4 x ){
+    float s  = snoise(vec4( x ));
+    float s1 = snoise(vec4( x.y - 19.1 , x.z + 33.4 , x.x + 47.2, x.w ));
+    float s2 = snoise(vec4( x.z + 74.2 , x.x - 124.5 , x.y + 99.4, x.w ));
+    return vec3( s , s1 , s2 );
+}
+
+#endif
+
+    void main() {}
+</script>
+<script id='d:/Github/MyShaders/lygia/generative/random.glsl' type='x-shader/x-fragment'>#version 300 es
+    precision highp float;
+    uniform vec3        iResolution;
+uniform float       iTime;
+uniform float       iTimeDelta;
+uniform int         iFrame;
+uniform vec4        iDate;
+uniform vec3        iChannelResolution[10];
+uniform vec4        iMouse;
+uniform vec4        iMouseButton;
+uniform mat4        iViewMatrix;
+uniform sampler2D   iChannel0;
+uniform sampler2D   iChannel1;
+uniform sampler2D   iChannel2;
+uniform sampler2D   iChannel3;
+uniform sampler2D   iChannel4;
+uniform sampler2D   iChannel5;
+uniform sampler2D   iChannel6;
+uniform sampler2D   iChannel7;
+uniform sampler2D   iChannel8;
+uniform sampler2D   iChannel9;
+uniform sampler2D   iKeyboard;
+uniform float       iSampleRate;
+
+#define iGlobalTime iTime
+#define iGlobalFrame iFrame
+
+#define SHADER_TOY
+
+    /*
+contributors: ["Patricio Gonzalez Vivo", "David Hoskins", "Inigo Quilez"]
+description: Pass a value and get some random normalize value between 0 and 1
+use: float random[2|3](<float|vec2|vec3> value)
+options:
+    - RANDOM_HIGHER_RANGE: for working with a range over 0 and 1
+    - RANDOM_SINLESS: Use sin-less random, which tolerates bigger values before producing pattern. From https://www.shadertoy.com/view/4djSRW
+    - RANDOM_SCALE: by default this scale if for number with a big range. For producing good random between 0 and 1 use bigger range
+examples:
+    - /shaders/generative_random.frag
+license:
+    - MIT License (MIT) Copyright 2014, David Hoskins
+*/
+
+#ifndef RANDOM_SCALE
+#ifdef RANDOM_HIGHER_RANGE
+#define RANDOM_SCALE vec4(.1031, .1030, .0973, .1099)
+#else
+#define RANDOM_SCALE vec4(443.897, 441.423, .0973, .1099)
+#endif
+#endif
+
+#ifndef FNC_RANDOM
+#define FNC_RANDOM
+float random(in float x) {
+#ifdef RANDOM_SINLESS
+    x = fract(x * RANDOM_SCALE.x);
+    x *= x + 33.33;
+    x *= x + x;
+    return fract(x);
+#else
+    return fract(sin(x) * 43758.5453);
+#endif
+}
+
+float random(in vec2 st) {
+#ifdef RANDOM_SINLESS
+    vec3 p3  = fract(vec3(st.xyx) * RANDOM_SCALE.xyz);
+    p3 += dot(p3, p3.yzx + 33.33);
+    return fract((p3.x + p3.y) * p3.z);
+#else
+    return fract(sin(dot(st.xy, vec2(12.9898, 78.233))) * 43758.5453);
+#endif
+}
+
+float random(in vec3 pos) {
+#ifdef RANDOM_SINLESS
+    pos  = fract(pos * RANDOM_SCALE.xyz);
+    pos += dot(pos, pos.zyx + 31.32);
+    return fract((pos.x + pos.y) * pos.z);
+#else
+    return fract(sin(dot(pos.xyz, vec3(70.9898, 78.233, 32.4355))) * 43758.5453123);
+#endif
+}
+
+float random(in vec4 pos) {
+#ifdef RANDOM_SINLESS
+    pos = fract(pos * RANDOM_SCALE);
+    pos += dot(pos, pos.wzxy + 33.33);
+    return fract((pos.x + pos.y) * (pos.z + pos.w));
+#else
+    float dot_product = dot(pos, vec4(12.9898,78.233,45.164,94.673));
+    return fract(sin(dot_product) * 43758.5453);
+#endif
+}
+
+vec2 random2(float p) {
+    vec3 p3 = fract(vec3(p) * RANDOM_SCALE.xyz);
+    p3 += dot(p3, p3.yzx + 19.19);
+    return fract((p3.xx + p3.yz) * p3.zy);
+}
+
+vec2 random2(vec2 p) {
+    vec3 p3 = fract(p.xyx * RANDOM_SCALE.xyz);
+    p3 += dot(p3, p3.yzx + 19.19);
+    return fract((p3.xx + p3.yz) * p3.zy);
+}
+
+vec2 random2(vec3 p3) {
+    p3 = fract(p3 * RANDOM_SCALE.xyz);
+    p3 += dot(p3, p3.yzx + 19.19);
+    return fract((p3.xx + p3.yz) * p3.zy);
+}
+
+vec3 random3(float p) {
+    vec3 p3 = fract(vec3(p) * RANDOM_SCALE.xyz);
+    p3 += dot(p3, p3.yzx + 19.19);
+    return fract((p3.xxy + p3.yzz) * p3.zyx); 
+}
+
+vec3 random3(vec2 p) {
+    vec3 p3 = fract(vec3(p.xyx) * RANDOM_SCALE.xyz);
+    p3 += dot(p3, p3.yxz + 19.19);
+    return fract((p3.xxy + p3.yzz) * p3.zyx);
+}
+
+vec3 random3(vec3 p) {
+    p = fract(p * RANDOM_SCALE.xyz);
+    p += dot(p, p.yxz + 19.19);
+    return fract((p.xxy + p.yzz) * p.zyx);
+}
+
+vec4 random4(float p) {
+    vec4 p4 = fract(p * RANDOM_SCALE);
+    p4 += dot(p4, p4.wzxy + 19.19);
+    return fract((p4.xxyz + p4.yzzw) * p4.zywx);   
+}
+
+vec4 random4(vec2 p) {
+    vec4 p4 = fract(p.xyxy * RANDOM_SCALE);
+    p4 += dot(p4, p4.wzxy + 19.19);
+    return fract((p4.xxyz + p4.yzzw) * p4.zywx);
+}
+
+vec4 random4(vec3 p) {
+    vec4 p4 = fract(p.xyzx * RANDOM_SCALE);
+    p4 += dot(p4, p4.wzxy + 19.19);
+    return fract((p4.xxyz + p4.yzzw) * p4.zywx);
+}
+
+vec4 random4(vec4 p4) {
+    p4 = fract(p4  * RANDOM_SCALE);
+    p4 += dot(p4, p4.wzxy + 19.19);
+    return fract((p4.xxyz + p4.yzzw) * p4.zywx);
+}
+#endif
+    void main() {}
+</script>
+<script id='d:/Github/MyShaders/lygia/generative/srandom.glsl' type='x-shader/x-fragment'>#version 300 es
+    precision highp float;
+    uniform vec3        iResolution;
+uniform float       iTime;
+uniform float       iTimeDelta;
+uniform int         iFrame;
+uniform vec4        iDate;
+uniform vec3        iChannelResolution[10];
+uniform vec4        iMouse;
+uniform vec4        iMouseButton;
+uniform mat4        iViewMatrix;
+uniform sampler2D   iChannel0;
+uniform sampler2D   iChannel1;
+uniform sampler2D   iChannel2;
+uniform sampler2D   iChannel3;
+uniform sampler2D   iChannel4;
+uniform sampler2D   iChannel5;
+uniform sampler2D   iChannel6;
+uniform sampler2D   iChannel7;
+uniform sampler2D   iChannel8;
+uniform sampler2D   iChannel9;
+uniform sampler2D   iKeyboard;
+uniform float       iSampleRate;
+
+#define iGlobalTime iTime
+#define iGlobalFrame iFrame
+
+#define SHADER_TOY
+
+    /*
+contributors: Patricio Gonzalez Vivo
+description: Signed Random
+use: srandomX(<vec2|vec3> x)
+license:
+    - Copyright (c) 2021 Patricio Gonzalez Vivo under Prosperity License - https://prosperitylicense.com/versions/3.0.0
+    - Copyright (c) 2021 Patricio Gonzalez Vivo under Patron License - https://lygia.xyz/license
+*/
+
+#ifndef FNC_SRANDOM
+#define FNC_SRANDOM
+
+float srandom(in float x) {
+  return -1. + 2. * fract(sin(x) * 43758.5453);
+}
+
+float srandom(in vec2 st) {
+  return -1. + 2. * fract(sin(dot(st.xy, vec2(12.9898, 78.233))) * 43758.5453);
+}
+
+float srandom(in vec3 pos) {
+  return -1. + 2. * fract(sin(dot(pos.xyz, vec3(70.9898, 78.233, 32.4355))) * 43758.5453123);
+}
+
+float srandom(in vec4 pos) {
+    float dot_product = dot(pos, vec4(12.9898,78.233,45.164,94.673));
+    return -1. + 2. * fract(sin(dot_product) * 43758.5453);
+}
+
+vec2 srandom2(in vec2 st) {
+    const vec2 k = vec2(.3183099, .3678794);
+    st = st * k + k.yx;
+    return -1. + 2. * fract(16. * k * fract(st.x * st.y * (st.x + st.y)));
+}
+
+vec3 srandom3(in vec3 p) {
+    p = vec3( dot(p, vec3(127.1, 311.7, 74.7)),
+            dot(p, vec3(269.5, 183.3, 246.1)),
+            dot(p, vec3(113.5, 271.9, 124.6)));
+    return -1. + 2. * fract(sin(p) * 43758.5453123);
+}
+
+vec2 srandom2(in vec2 p, const in float tileLength) {
+    p = mod(p, vec2(tileLength));
+    return srandom2(p);
+}
+
+vec3 srandom3(in vec3 p, const in float tileLength) {
+    p = mod(p, vec3(tileLength));
+    return srandom3(p);
+}
+
+#endif
+    void main() {}
+</script>
+<script id='d:/Github/MyShaders/lygia/math/cubic.glsl' type='x-shader/x-fragment'>#version 300 es
+    precision highp float;
+    uniform vec3        iResolution;
+uniform float       iTime;
+uniform float       iTimeDelta;
+uniform int         iFrame;
+uniform vec4        iDate;
+uniform vec3        iChannelResolution[10];
+uniform vec4        iMouse;
+uniform vec4        iMouseButton;
+uniform mat4        iViewMatrix;
+uniform sampler2D   iChannel0;
+uniform sampler2D   iChannel1;
+uniform sampler2D   iChannel2;
+uniform sampler2D   iChannel3;
+uniform sampler2D   iChannel4;
+uniform sampler2D   iChannel5;
+uniform sampler2D   iChannel6;
+uniform sampler2D   iChannel7;
+uniform sampler2D   iChannel8;
+uniform sampler2D   iChannel9;
+uniform sampler2D   iKeyboard;
+uniform float       iSampleRate;
+
+#define iGlobalTime iTime
+#define iGlobalFrame iFrame
+
+#define SHADER_TOY
+
+    /*
+contributors: Inigo Quiles
+description: cubic polynomial https://iquilezles.org/articles/smoothsteps/
+use: <float|vec2|vec3|vec4> cubic(<float|vec2|vec3|vec4> value[, <float> in, <float> out]);
+examples:
+    - https://raw.githubusercontent.com/patriciogonzalezvivo/lygia_examples/main/math_functions.frag
+*/
+
+#ifndef FNC_CUBIC
+#define FNC_CUBIC 
+float cubic(const in float v) { return v*v*(3.0-2.0*v); }
+vec2  cubic(const in vec2 v)  { return v*v*(3.0-2.0*v); }
+vec3  cubic(const in vec3 v)  { return v*v*(3.0-2.0*v); }
+vec4  cubic(const in vec4 v)  { return v*v*(3.0-2.0*v); }
+
+float cubic(const in float v, in float slope0, in float slope1) {
+    float a = slope0 + slope1 - 2.;
+    float b = -2. * slope0 - slope1 + 3.;
+    float c = slope0;
+    float v2 = v * v;
+    float v3 = v * v2;
+    return a * v3 + b * v2 + c * v;
+}
+
+vec2 cubic(const in vec2 v, in float slope0, in float slope1) {
+    float a = slope0 + slope1 - 2.;
+    float b = -2. * slope0 - slope1 + 3.;
+    float c = slope0;
+    vec2 v2 = v * v;
+    vec2 v3 = v * v2;
+    return a * v3 + b * v2 + c * v;
+}
+
+vec3 cubic(const in vec3 v, in float slope0, in float slope1) {
+    float a = slope0 + slope1 - 2.;
+    float b = -2. * slope0 - slope1 + 3.;
+    float c = slope0;
+    vec3 v2 = v * v;
+    vec3 v3 = v * v2;
+    return a * v3 + b * v2 + c * v;
+}
+
+vec4 cubic(const in vec4 v, in float slope0, in float slope1) {
+    float a = slope0 + slope1 - 2.;
+    float b = -2. * slope0 - slope1 + 3.;
+    float c = slope0;
+    vec4 v2 = v * v;
+    vec4 v3 = v * v2;
+    return a * v3 + b * v2 + c * v;
+}
+#endif
+    void main() {}
+</script>
+<script id='d:/Github/MyShaders/lygia/math/quintic.glsl' type='x-shader/x-fragment'>#version 300 es
+    precision highp float;
+    uniform vec3        iResolution;
+uniform float       iTime;
+uniform float       iTimeDelta;
+uniform int         iFrame;
+uniform vec4        iDate;
+uniform vec3        iChannelResolution[10];
+uniform vec4        iMouse;
+uniform vec4        iMouseButton;
+uniform mat4        iViewMatrix;
+uniform sampler2D   iChannel0;
+uniform sampler2D   iChannel1;
+uniform sampler2D   iChannel2;
+uniform sampler2D   iChannel3;
+uniform sampler2D   iChannel4;
+uniform sampler2D   iChannel5;
+uniform sampler2D   iChannel6;
+uniform sampler2D   iChannel7;
+uniform sampler2D   iChannel8;
+uniform sampler2D   iChannel9;
+uniform sampler2D   iKeyboard;
+uniform float       iSampleRate;
+
+#define iGlobalTime iTime
+#define iGlobalFrame iFrame
+
+#define SHADER_TOY
+
+    /*
+contributors: Inigo Quiles
+description: quintic polynomial https://iquilezles.org/articles/smoothsteps/
+use: <float|vec2|vec3|vec4> quintic(<float|vec2|vec3|vec4> value);
+examples:
+    - https://raw.githubusercontent.com/patriciogonzalezvivo/lygia_examples/main/math_functions.frag
+*/
+
+#ifndef FNC_QUINTIC
+#define FNC_QUINTIC 
+
+float quintic(const in float v) { return v*v*v*(v*(v*6.0-15.0)+10.0); }
+vec2  quintic(const in vec2 v)  { return v*v*v*(v*(v*6.0-15.0)+10.0); }
+vec3  quintic(const in vec3 v)  { return v*v*v*(v*(v*6.0-15.0)+10.0); }
+vec4  quintic(const in vec4 v)  { return v*v*v*(v*(v*6.0-15.0)+10.0); }
+
+#endif
+    void main() {}
+</script>
+<script id='d:/Github/MyShaders/lygia/generative/gnoise.glsl' type='x-shader/x-fragment'>#version 300 es
+    precision highp float;
+    uniform vec3        iResolution;
+uniform float       iTime;
+uniform float       iTimeDelta;
+uniform int         iFrame;
+uniform vec4        iDate;
+uniform vec3        iChannelResolution[10];
+uniform vec4        iMouse;
+uniform vec4        iMouseButton;
+uniform mat4        iViewMatrix;
+uniform sampler2D   iChannel0;
+uniform sampler2D   iChannel1;
+uniform sampler2D   iChannel2;
+uniform sampler2D   iChannel3;
+uniform sampler2D   iChannel4;
+uniform sampler2D   iChannel5;
+uniform sampler2D   iChannel6;
+uniform sampler2D   iChannel7;
+uniform sampler2D   iChannel8;
+uniform sampler2D   iChannel9;
+uniform sampler2D   iKeyboard;
+uniform float       iSampleRate;
+
+#define iGlobalTime iTime
+#define iGlobalFrame iFrame
+
+#define SHADER_TOY
+
+    /*
+contributors: ["Patricio Gonzalez Vivo", "David Hoskins", "Inigo Quilez"]
+description: Pass a value and get some random normalize value between 0 and 1
+use: float random[2|3](<float|vec2|vec3> value)
+options:
+    - RANDOM_HIGHER_RANGE: for working with a range over 0 and 1
+    - RANDOM_SINLESS: Use sin-less random, which tolerates bigger values before producing pattern. From https://www.shadertoy.com/view/4djSRW
+    - RANDOM_SCALE: by default this scale if for number with a big range. For producing good random between 0 and 1 use bigger range
+examples:
+    - /shaders/generative_random.frag
+license:
+    - MIT License (MIT) Copyright 2014, David Hoskins
+*/
+
+#ifndef RANDOM_SCALE
+#ifdef RANDOM_HIGHER_RANGE
+#define RANDOM_SCALE vec4(.1031, .1030, .0973, .1099)
+#else
+#define RANDOM_SCALE vec4(443.897, 441.423, .0973, .1099)
+#endif
+#endif
+
+#ifndef FNC_RANDOM
+#define FNC_RANDOM
+float random(in float x) {
+#ifdef RANDOM_SINLESS
+    x = fract(x * RANDOM_SCALE.x);
+    x *= x + 33.33;
+    x *= x + x;
+    return fract(x);
+#else
+    return fract(sin(x) * 43758.5453);
+#endif
+}
+
+float random(in vec2 st) {
+#ifdef RANDOM_SINLESS
+    vec3 p3  = fract(vec3(st.xyx) * RANDOM_SCALE.xyz);
+    p3 += dot(p3, p3.yzx + 33.33);
+    return fract((p3.x + p3.y) * p3.z);
+#else
+    return fract(sin(dot(st.xy, vec2(12.9898, 78.233))) * 43758.5453);
+#endif
+}
+
+float random(in vec3 pos) {
+#ifdef RANDOM_SINLESS
+    pos  = fract(pos * RANDOM_SCALE.xyz);
+    pos += dot(pos, pos.zyx + 31.32);
+    return fract((pos.x + pos.y) * pos.z);
+#else
+    return fract(sin(dot(pos.xyz, vec3(70.9898, 78.233, 32.4355))) * 43758.5453123);
+#endif
+}
+
+float random(in vec4 pos) {
+#ifdef RANDOM_SINLESS
+    pos = fract(pos * RANDOM_SCALE);
+    pos += dot(pos, pos.wzxy + 33.33);
+    return fract((pos.x + pos.y) * (pos.z + pos.w));
+#else
+    float dot_product = dot(pos, vec4(12.9898,78.233,45.164,94.673));
+    return fract(sin(dot_product) * 43758.5453);
+#endif
+}
+
+vec2 random2(float p) {
+    vec3 p3 = fract(vec3(p) * RANDOM_SCALE.xyz);
+    p3 += dot(p3, p3.yzx + 19.19);
+    return fract((p3.xx + p3.yz) * p3.zy);
+}
+
+vec2 random2(vec2 p) {
+    vec3 p3 = fract(p.xyx * RANDOM_SCALE.xyz);
+    p3 += dot(p3, p3.yzx + 19.19);
+    return fract((p3.xx + p3.yz) * p3.zy);
+}
+
+vec2 random2(vec3 p3) {
+    p3 = fract(p3 * RANDOM_SCALE.xyz);
+    p3 += dot(p3, p3.yzx + 19.19);
+    return fract((p3.xx + p3.yz) * p3.zy);
+}
+
+vec3 random3(float p) {
+    vec3 p3 = fract(vec3(p) * RANDOM_SCALE.xyz);
+    p3 += dot(p3, p3.yzx + 19.19);
+    return fract((p3.xxy + p3.yzz) * p3.zyx); 
+}
+
+vec3 random3(vec2 p) {
+    vec3 p3 = fract(vec3(p.xyx) * RANDOM_SCALE.xyz);
+    p3 += dot(p3, p3.yxz + 19.19);
+    return fract((p3.xxy + p3.yzz) * p3.zyx);
+}
+
+vec3 random3(vec3 p) {
+    p = fract(p * RANDOM_SCALE.xyz);
+    p += dot(p, p.yxz + 19.19);
+    return fract((p.xxy + p.yzz) * p.zyx);
+}
+
+vec4 random4(float p) {
+    vec4 p4 = fract(p * RANDOM_SCALE);
+    p4 += dot(p4, p4.wzxy + 19.19);
+    return fract((p4.xxyz + p4.yzzw) * p4.zywx);   
+}
+
+vec4 random4(vec2 p) {
+    vec4 p4 = fract(p.xyxy * RANDOM_SCALE);
+    p4 += dot(p4, p4.wzxy + 19.19);
+    return fract((p4.xxyz + p4.yzzw) * p4.zywx);
+}
+
+vec4 random4(vec3 p) {
+    vec4 p4 = fract(p.xyzx * RANDOM_SCALE);
+    p4 += dot(p4, p4.wzxy + 19.19);
+    return fract((p4.xxyz + p4.yzzw) * p4.zywx);
+}
+
+vec4 random4(vec4 p4) {
+    p4 = fract(p4  * RANDOM_SCALE);
+    p4 += dot(p4, p4.wzxy + 19.19);
+    return fract((p4.xxyz + p4.yzzw) * p4.zywx);
+}
+#endif
+/*
+contributors: Patricio Gonzalez Vivo
+description: Signed Random
+use: srandomX(<vec2|vec3> x)
+license:
+    - Copyright (c) 2021 Patricio Gonzalez Vivo under Prosperity License - https://prosperitylicense.com/versions/3.0.0
+    - Copyright (c) 2021 Patricio Gonzalez Vivo under Patron License - https://lygia.xyz/license
+*/
+
+#ifndef FNC_SRANDOM
+#define FNC_SRANDOM
+
+float srandom(in float x) {
+  return -1. + 2. * fract(sin(x) * 43758.5453);
+}
+
+float srandom(in vec2 st) {
+  return -1. + 2. * fract(sin(dot(st.xy, vec2(12.9898, 78.233))) * 43758.5453);
+}
+
+float srandom(in vec3 pos) {
+  return -1. + 2. * fract(sin(dot(pos.xyz, vec3(70.9898, 78.233, 32.4355))) * 43758.5453123);
+}
+
+float srandom(in vec4 pos) {
+    float dot_product = dot(pos, vec4(12.9898,78.233,45.164,94.673));
+    return -1. + 2. * fract(sin(dot_product) * 43758.5453);
+}
+
+vec2 srandom2(in vec2 st) {
+    const vec2 k = vec2(.3183099, .3678794);
+    st = st * k + k.yx;
+    return -1. + 2. * fract(16. * k * fract(st.x * st.y * (st.x + st.y)));
+}
+
+vec3 srandom3(in vec3 p) {
+    p = vec3( dot(p, vec3(127.1, 311.7, 74.7)),
+            dot(p, vec3(269.5, 183.3, 246.1)),
+            dot(p, vec3(113.5, 271.9, 124.6)));
+    return -1. + 2. * fract(sin(p) * 43758.5453123);
+}
+
+vec2 srandom2(in vec2 p, const in float tileLength) {
+    p = mod(p, vec2(tileLength));
+    return srandom2(p);
+}
+
+vec3 srandom3(in vec3 p, const in float tileLength) {
+    p = mod(p, vec3(tileLength));
+    return srandom3(p);
+}
+
+#endif
+/*
+contributors: Inigo Quiles
+description: cubic polynomial https://iquilezles.org/articles/smoothsteps/
+use: <float|vec2|vec3|vec4> cubic(<float|vec2|vec3|vec4> value[, <float> in, <float> out]);
+examples:
+    - https://raw.githubusercontent.com/patriciogonzalezvivo/lygia_examples/main/math_functions.frag
+*/
+
+#ifndef FNC_CUBIC
+#define FNC_CUBIC 
+float cubic(const in float v) { return v*v*(3.0-2.0*v); }
+vec2  cubic(const in vec2 v)  { return v*v*(3.0-2.0*v); }
+vec3  cubic(const in vec3 v)  { return v*v*(3.0-2.0*v); }
+vec4  cubic(const in vec4 v)  { return v*v*(3.0-2.0*v); }
+
+float cubic(const in float v, in float slope0, in float slope1) {
+    float a = slope0 + slope1 - 2.;
+    float b = -2. * slope0 - slope1 + 3.;
+    float c = slope0;
+    float v2 = v * v;
+    float v3 = v * v2;
+    return a * v3 + b * v2 + c * v;
+}
+
+vec2 cubic(const in vec2 v, in float slope0, in float slope1) {
+    float a = slope0 + slope1 - 2.;
+    float b = -2. * slope0 - slope1 + 3.;
+    float c = slope0;
+    vec2 v2 = v * v;
+    vec2 v3 = v * v2;
+    return a * v3 + b * v2 + c * v;
+}
+
+vec3 cubic(const in vec3 v, in float slope0, in float slope1) {
+    float a = slope0 + slope1 - 2.;
+    float b = -2. * slope0 - slope1 + 3.;
+    float c = slope0;
+    vec3 v2 = v * v;
+    vec3 v3 = v * v2;
+    return a * v3 + b * v2 + c * v;
+}
+
+vec4 cubic(const in vec4 v, in float slope0, in float slope1) {
+    float a = slope0 + slope1 - 2.;
+    float b = -2. * slope0 - slope1 + 3.;
+    float c = slope0;
+    vec4 v2 = v * v;
+    vec4 v3 = v * v2;
+    return a * v3 + b * v2 + c * v;
+}
+#endif
+/*
+contributors: Inigo Quiles
+description: quintic polynomial https://iquilezles.org/articles/smoothsteps/
+use: <float|vec2|vec3|vec4> quintic(<float|vec2|vec3|vec4> value);
+examples:
+    - https://raw.githubusercontent.com/patriciogonzalezvivo/lygia_examples/main/math_functions.frag
+*/
+
+#ifndef FNC_QUINTIC
+#define FNC_QUINTIC 
+
+float quintic(const in float v) { return v*v*v*(v*(v*6.0-15.0)+10.0); }
+vec2  quintic(const in vec2 v)  { return v*v*v*(v*(v*6.0-15.0)+10.0); }
+vec3  quintic(const in vec3 v)  { return v*v*v*(v*(v*6.0-15.0)+10.0); }
+vec4  quintic(const in vec4 v)  { return v*v*v*(v*(v*6.0-15.0)+10.0); }
+
+#endif
+
+/*
+contributors: Patricio Gonzalez Vivo
+description: Gradient Noise
+use: gnoise(<float> x)
+license:
+    - Copyright (c) 2021 Patricio Gonzalez Vivo under Prosperity License - https://prosperitylicense.com/versions/3.0.0
+    - Copyright (c) 2021 Patricio Gonzalez Vivo under Patron License - https://lygia.xyz/license
+*/
+
+#ifndef FNC_GNOISE
+#define FNC_GNOISE
+
+float gnoise(float x) {
+    float i = floor(x);  // integer
+    float f = fract(x);  // fraction
+    return mix(random(i), random(i + 1.0), smoothstep(0.,1.,f)); 
+}
+
+float gnoise(vec2 st) {
+    vec2 i = floor(st);
+    vec2 f = fract(st);
+    float a = random(i);
+    float b = random(i + vec2(1.0, 0.0));
+    float c = random(i + vec2(0.0, 1.0));
+    float d = random(i + vec2(1.0, 1.0));
+    vec2 u = cubic(f);
+    return mix( a, b, u.x) +
+                (c - a)* u.y * (1.0 - u.x) +
+                (d - b) * u.x * u.y;
+}
+
+float gnoise(vec3 p) {
+    vec3 i = floor(p);
+    vec3 f = fract(p);
+    vec3 u = quintic(f);
+    return -1.0 + 2.0 * mix( mix( mix( random(i + vec3(0.0,0.0,0.0)), 
+                                        random(i + vec3(1.0,0.0,0.0)), u.x),
+                                mix( random(i + vec3(0.0,1.0,0.0)), 
+                                        random(i + vec3(1.0,1.0,0.0)), u.x), u.y),
+                            mix( mix( random(i + vec3(0.0,0.0,1.0)), 
+                                        random(i + vec3(1.0,0.0,1.0)), u.x),
+                                mix( random(i + vec3(0.0,1.0,1.0)), 
+                                        random(i + vec3(1.0,1.0,1.0)), u.x), u.y), u.z );
+}
+
+float gnoise(vec3 p, float tileLength) {
+    vec3 i = floor(p);
+    vec3 f = fract(p);
+            
+    vec3 u = quintic(f);
+        
+    return mix( mix( mix( dot( srandom3(i + vec3(0.0,0.0,0.0), tileLength), f - vec3(0.0,0.0,0.0)), 
+                            dot( srandom3(i + vec3(1.0,0.0,0.0), tileLength), f - vec3(1.0,0.0,0.0)), u.x),
+                    mix( dot( srandom3(i + vec3(0.0,1.0,0.0), tileLength), f - vec3(0.0,1.0,0.0)), 
+                            dot( srandom3(i + vec3(1.0,1.0,0.0), tileLength), f - vec3(1.0,1.0,0.0)), u.x), u.y),
+                mix( mix( dot( srandom3(i + vec3(0.0,0.0,1.0), tileLength), f - vec3(0.0,0.0,1.0)), 
+                            dot( srandom3(i + vec3(1.0,0.0,1.0), tileLength), f - vec3(1.0,0.0,1.0)), u.x),
+                    mix( dot( srandom3(i + vec3(0.0,1.0,1.0), tileLength), f - vec3(0.0,1.0,1.0)), 
+                            dot( srandom3(i + vec3(1.0,1.0,1.0), tileLength), f - vec3(1.0,1.0,1.0)), u.x), u.y), u.z );
+}
+
+vec3 gnoise3(vec3 x) {
+    return vec3(gnoise(x+vec3(123.456, 0.567, 0.37)),
+                gnoise(x+vec3(0.11, 47.43, 19.17)),
+                gnoise(x) );
+}
+
+#endif
+    void main() {}
+</script>
+<script id='d:/Github/MyShaders/lygia/generative/fbm.glsl' type='x-shader/x-fragment'>#version 300 es
+    precision highp float;
+    uniform vec3        iResolution;
+uniform float       iTime;
+uniform float       iTimeDelta;
+uniform int         iFrame;
+uniform vec4        iDate;
+uniform vec3        iChannelResolution[10];
+uniform vec4        iMouse;
+uniform vec4        iMouseButton;
+uniform mat4        iViewMatrix;
+uniform sampler2D   iChannel0;
+uniform sampler2D   iChannel1;
+uniform sampler2D   iChannel2;
+uniform sampler2D   iChannel3;
+uniform sampler2D   iChannel4;
+uniform sampler2D   iChannel5;
+uniform sampler2D   iChannel6;
+uniform sampler2D   iChannel7;
+uniform sampler2D   iChannel8;
+uniform sampler2D   iChannel9;
+uniform sampler2D   iKeyboard;
+uniform float       iSampleRate;
+
+#define iGlobalTime iTime
+#define iGlobalFrame iFrame
+
+#define SHADER_TOY
+
+    /*
+contributors: [Stefan Gustavson, Ian McEwan]
+description: modulus of 289
+use: <float|vec2|vec3|vec4> mod289(<float|vec2|vec3|vec4> x)
+*/
+
+#ifndef FNC_MOD289
+#define FNC_MOD289
+
+float mod289(const in float x) { return x - floor(x * (1. / 289.)) * 289.; }
+vec2 mod289(const in vec2 x) { return x - floor(x * (1. / 289.)) * 289.; }
+vec3 mod289(const in vec3 x) { return x - floor(x * (1. / 289.)) * 289.; }
+vec4 mod289(const in vec4 x) { return x - floor(x * (1. / 289.)) * 289.; }
+
+#endif
+
+/*
+contributors: [Stefan Gustavson, Ian McEwan]
+description: modulus of 289
+use: <float|vec2|vec3|vec4> mod289(<float|vec2|vec3|vec4> x)
+*/
+
+#ifndef FNC_MOD289
+#define FNC_MOD289
+
+float mod289(const in float x) { return x - floor(x * (1. / 289.)) * 289.; }
+vec2 mod289(const in vec2 x) { return x - floor(x * (1. / 289.)) * 289.; }
+vec3 mod289(const in vec3 x) { return x - floor(x * (1. / 289.)) * 289.; }
+vec4 mod289(const in vec4 x) { return x - floor(x * (1. / 289.)) * 289.; }
+
+#endif
+
+
+/*
+contributors: [Stefan Gustavson, Ian McEwan]
+description: permute
+use: <float|vec2|vec3|vec4> permute(<float|vec2|vec3|vec4> x)
+examples:
+    - https://raw.githubusercontent.com/patriciogonzalezvivo/lygia_examples/main/math_functions.frag
+*/
+
+#ifndef FNC_PERMUTE
+#define FNC_PERMUTE
+
+float permute(const in float v) { return mod289(((v * 34.0) + 1.0) * v); }
+vec2 permute(const in vec2 v) { return mod289(((v * 34.0) + 1.0) * v); }
+vec3 permute(const in vec3 v) { return mod289(((v * 34.0) + 1.0) * v); }
+vec4 permute(const in vec4 v) { return mod289(((v * 34.0) + 1.0) * v); }
+
+#endif
+
+/*
+contributors: [Stefan Gustavson, Ian McEwan]
+description: Fast, accurate inverse square root. 
+use: <float|vec2|vec3|vec4> taylorInvSqrt(<float|vec2|vec3|vec4> x)
+*/
+
+#ifndef FNC_TAYLORINVSQRT
+#define FNC_TAYLORINVSQRT
+float taylorInvSqrt(in float r) { return 1.79284291400159 - 0.85373472095314 * r; }
+vec2 taylorInvSqrt(in vec2 r) { return 1.79284291400159 - 0.85373472095314 * r; }
+vec3 taylorInvSqrt(in vec3 r) { return 1.79284291400159 - 0.85373472095314 * r; }
+vec4 taylorInvSqrt(in vec4 r) { return 1.79284291400159 - 0.85373472095314 * r; }
+#endif
+/*
+contributors: [Stefan Gustavson, Ian McEwan]
+description: grad4, used for snoise(vec4 v)
+use: grad4(<float> j, <vec4> ip)
+*/
+
+#ifndef FNC_GRAD4
+#define FNC_GRAD4
+vec4 grad4(float j, vec4 ip) {
+    const vec4 ones = vec4(1.0, 1.0, 1.0, -1.0);
+    vec4 p,s;
+    p.xyz = floor( fract (vec3(j) * ip.xyz) * 7.0) * ip.z - 1.0;
+    p.w = 1.5 - dot(abs(p.xyz), ones.xyz);
+    s = vec4(lessThan(p, vec4(0.0)));
+    p.xyz = p.xyz + (s.xyz*2.0 - 1.0) * s.www;
+    return p;
+}
+#endif
+
+
+/*
+contributors: [Stefan Gustavson, Ian McEwan]
+description: Simplex Noise https://github.com/stegu/webgl-noise
+use: snoise(<vec2|vec3|vec4> pos)
+license: |
+    Copyright 2021-2023 by Stefan Gustavson and Ian McEwan.
+    Published under the terms of the MIT license:
+    https://opensource.org/license/mit/
+examples:
+    - /shaders/generative_snoise.frag
+*/
+
+#ifndef FNC_SNOISE
+#define FNC_SNOISE
+float snoise(in vec2 v) {
+    const vec4 C = vec4(0.211324865405187,  // (3.0-sqrt(3.0))/6.0
+                        0.366025403784439,  // 0.5*(sqrt(3.0)-1.0)
+                        -0.577350269189626,  // -1.0 + 2.0 * C.x
+                        0.024390243902439); // 1.0 / 41.0
+    // First corner
+    vec2 i  = floor(v + dot(v, C.yy) );
+    vec2 x0 = v -   i + dot(i, C.xx);
+
+    // Other corners
+    vec2 i1;
+    //i1.x = step( x0.y, x0.x ); // x0.x > x0.y ? 1.0 : 0.0
+    //i1.y = 1.0 - i1.x;
+    i1 = (x0.x > x0.y) ? vec2(1.0, 0.0) : vec2(0.0, 1.0);
+    // x0 = x0 - 0.0 + 0.0 * C.xx ;
+    // x1 = x0 - i1 + 1.0 * C.xx ;
+    // x2 = x0 - 1.0 + 2.0 * C.xx ;
+    vec4 x12 = x0.xyxy + C.xxzz;
+    x12.xy -= i1;
+
+    // Permutations
+    i = mod289(i); // Avoid truncation effects in permutation
+    vec3 p = permute( permute( i.y + vec3(0.0, i1.y, 1.0 ))
+    + i.x + vec3(0.0, i1.x, 1.0 ));
+
+    vec3 m = max(0.5 - vec3(dot(x0,x0), dot(x12.xy,x12.xy), dot(x12.zw,x12.zw)), 0.0);
+    m = m*m ;
+    m = m*m ;
+
+    // Gradients: 41 points uniformly over a line, mapped onto a diamond.
+    // The ring size 17*17 = 289 is close to a multiple of 41 (41*7 = 287)
+
+    vec3 x = 2.0 * fract(p * C.www) - 1.0;
+    vec3 h = abs(x) - 0.5;
+    vec3 ox = floor(x + 0.5);
+    vec3 a0 = x - ox;
+
+    // Normalise gradients implicitly by scaling m
+    // Approximation of: m *= inversesqrt( a0*a0 + h*h );
+    m *= 1.79284291400159 - 0.85373472095314 * ( a0*a0 + h*h );
+
+    // Compute final noise value at P
+    vec3 g;
+    g.x  = a0.x  * x0.x  + h.x  * x0.y;
+    g.yz = a0.yz * x12.xz + h.yz * x12.yw;
+    return 130.0 * dot(m, g);
+}
+
+
+float snoise(in vec3 v) {
+    const vec2  C = vec2(1.0/6.0, 1.0/3.0) ;
+    const vec4  D = vec4(0.0, 0.5, 1.0, 2.0);
+
+    // First corner
+    vec3 i  = floor(v + dot(v, C.yyy) );
+    vec3 x0 =   v - i + dot(i, C.xxx) ;
+
+    // Other corners
+    vec3 g = step(x0.yzx, x0.xyz);
+    vec3 l = 1.0 - g;
+    vec3 i1 = min( g.xyz, l.zxy );
+    vec3 i2 = max( g.xyz, l.zxy );
+
+    //   x0 = x0 - 0.0 + 0.0 * C.xxx;
+    //   x1 = x0 - i1  + 1.0 * C.xxx;
+    //   x2 = x0 - i2  + 2.0 * C.xxx;
+    //   x3 = x0 - 1.0 + 3.0 * C.xxx;
+    vec3 x1 = x0 - i1 + C.xxx;
+    vec3 x2 = x0 - i2 + C.yyy; // 2.0*C.x = 1/3 = C.y
+    vec3 x3 = x0 - D.yyy;      // -1.0+3.0*C.x = -0.5 = -D.y
+
+    // Permutations
+    i = mod289(i);
+    vec4 p = permute( permute( permute(
+                i.z + vec4(0.0, i1.z, i2.z, 1.0 ))
+            + i.y + vec4(0.0, i1.y, i2.y, 1.0 ))
+            + i.x + vec4(0.0, i1.x, i2.x, 1.0 ));
+
+    // Gradients: 7x7 points over a square, mapped onto an octahedron.
+    // The ring size 17*17 = 289 is close to a multiple of 49 (49*6 = 294)
+    float n_ = 0.142857142857; // 1.0/7.0
+    vec3  ns = n_ * D.wyz - D.xzx;
+
+    vec4 j = p - 49.0 * floor(p * ns.z * ns.z);  //  mod(p,7*7)
+
+    vec4 x_ = floor(j * ns.z);
+    vec4 y_ = floor(j - 7.0 * x_ );    // mod(j,N)
+
+    vec4 x = x_ *ns.x + ns.yyyy;
+    vec4 y = y_ *ns.x + ns.yyyy;
+    vec4 h = 1.0 - abs(x) - abs(y);
+
+    vec4 b0 = vec4( x.xy, y.xy );
+    vec4 b1 = vec4( x.zw, y.zw );
+
+    //vec4 s0 = vec4(lessThan(b0,0.0))*2.0 - 1.0;
+    //vec4 s1 = vec4(lessThan(b1,0.0))*2.0 - 1.0;
+    vec4 s0 = floor(b0)*2.0 + 1.0;
+    vec4 s1 = floor(b1)*2.0 + 1.0;
+    vec4 sh = -step(h, vec4(0.0));
+
+    vec4 a0 = b0.xzyw + s0.xzyw*sh.xxyy ;
+    vec4 a1 = b1.xzyw + s1.xzyw*sh.zzww ;
+
+    vec3 p0 = vec3(a0.xy,h.x);
+    vec3 p1 = vec3(a0.zw,h.y);
+    vec3 p2 = vec3(a1.xy,h.z);
+    vec3 p3 = vec3(a1.zw,h.w);
+
+    //Normalise gradients
+    vec4 norm = taylorInvSqrt(vec4(dot(p0,p0), dot(p1,p1), dot(p2, p2), dot(p3,p3)));
+    p0 *= norm.x;
+    p1 *= norm.y;
+    p2 *= norm.z;
+    p3 *= norm.w;
+
+    // Mix final noise value
+    vec4 m = max(0.6 - vec4(dot(x0,x0), dot(x1,x1), dot(x2,x2), dot(x3,x3)), 0.0);
+    m = m * m;
+    return 42.0 * dot( m*m, vec4( dot(p0,x0), dot(p1,x1),
+                                dot(p2,x2), dot(p3,x3) ) );
+}
+
+float snoise(in vec4 v) {
+    const vec4  C = vec4( 0.138196601125011,  // (5 - sqrt(5))/20  G4
+                        0.276393202250021,  // 2 * G4
+                        0.414589803375032,  // 3 * G4
+                        -0.447213595499958); // -1 + 4 * G4
+
+    // First corner
+    vec4 i  = floor(v + dot(v, vec4(.309016994374947451)) ); // (sqrt(5) - 1)/4
+    vec4 x0 = v -   i + dot(i, C.xxxx);
+
+    // Other corners
+
+    // Rank sorting originally contributed by Bill Licea-Kane, AMD (formerly ATI)
+    vec4 i0;
+    vec3 isX = step( x0.yzw, x0.xxx );
+    vec3 isYZ = step( x0.zww, x0.yyz );
+    //  i0.x = dot( isX, vec3( 1.0 ) );
+    i0.x = isX.x + isX.y + isX.z;
+    i0.yzw = 1.0 - isX;
+    //  i0.y += dot( isYZ.xy, vec2( 1.0 ) );
+    i0.y += isYZ.x + isYZ.y;
+    i0.zw += 1.0 - isYZ.xy;
+    i0.z += isYZ.z;
+    i0.w += 1.0 - isYZ.z;
+
+    // i0 now contains the unique values 0,1,2,3 in each channel
+    vec4 i3 = clamp( i0, 0.0, 1.0 );
+    vec4 i2 = clamp( i0-1.0, 0.0, 1.0 );
+    vec4 i1 = clamp( i0-2.0, 0.0, 1.0 );
+
+    //  x0 = x0 - 0.0 + 0.0 * C.xxxx
+    //  x1 = x0 - i1  + 1.0 * C.xxxx
+    //  x2 = x0 - i2  + 2.0 * C.xxxx
+    //  x3 = x0 - i3  + 3.0 * C.xxxx
+    //  x4 = x0 - 1.0 + 4.0 * C.xxxx
+    vec4 x1 = x0 - i1 + C.xxxx;
+    vec4 x2 = x0 - i2 + C.yyyy;
+    vec4 x3 = x0 - i3 + C.zzzz;
+    vec4 x4 = x0 + C.wwww;
+
+    // Permutations
+    i = mod289(i);
+    float j0 = permute( permute( permute( permute(i.w) + i.z) + i.y) + i.x);
+    vec4 j1 = permute( permute( permute( permute (
+                i.w + vec4(i1.w, i2.w, i3.w, 1.0 ))
+            + i.z + vec4(i1.z, i2.z, i3.z, 1.0 ))
+            + i.y + vec4(i1.y, i2.y, i3.y, 1.0 ))
+            + i.x + vec4(i1.x, i2.x, i3.x, 1.0 ));
+
+    // Gradients: 7x7x6 points over a cube, mapped onto a 4-cross polytope
+    // 7*7*6 = 294, which is close to the ring size 17*17 = 289.
+    vec4 ip = vec4(1.0/294.0, 1.0/49.0, 1.0/7.0, 0.0) ;
+
+    vec4 p0 = grad4(j0,   ip);
+    vec4 p1 = grad4(j1.x, ip);
+    vec4 p2 = grad4(j1.y, ip);
+    vec4 p3 = grad4(j1.z, ip);
+    vec4 p4 = grad4(j1.w, ip);
+
+    // Normalise gradients
+    vec4 norm = taylorInvSqrt(vec4(dot(p0,p0), dot(p1,p1), dot(p2, p2), dot(p3,p3)));
+    p0 *= norm.x;
+    p1 *= norm.y;
+    p2 *= norm.z;
+    p3 *= norm.w;
+    p4 *= taylorInvSqrt(dot(p4,p4));
+
+    // Mix contributions from the five corners
+    vec3 m0 = max(0.6 - vec3(dot(x0,x0), dot(x1,x1), dot(x2,x2)), 0.0);
+    vec2 m1 = max(0.6 - vec2(dot(x3,x3), dot(x4,x4)            ), 0.0);
+    m0 = m0 * m0;
+    m1 = m1 * m1;
+    return 49.0 * ( dot(m0*m0, vec3( dot( p0, x0 ), dot( p1, x1 ), dot( p2, x2 )))
+                + dot(m1*m1, vec2( dot( p3, x3 ), dot( p4, x4 ) ) ) ) ;
+}
+
+vec2 snoise2( vec2 x ){
+    float s  = snoise(vec2( x ));
+    float s1 = snoise(vec2( x.y - 19.1, x.x + 47.2 ));
+    return vec2( s , s1 );
+}
+
+vec3 snoise3( vec3 x ){
+    float s  = snoise(vec3( x ));
+    float s1 = snoise(vec3( x.y - 19.1 , x.z + 33.4 , x.x + 47.2 ));
+    float s2 = snoise(vec3( x.z + 74.2 , x.x - 124.5 , x.y + 99.4 ));
+    return vec3( s , s1 , s2 );
+}
+
+vec3 snoise3( vec4 x ){
+    float s  = snoise(vec4( x ));
+    float s1 = snoise(vec4( x.y - 19.1 , x.z + 33.4 , x.x + 47.2, x.w ));
+    float s2 = snoise(vec4( x.z + 74.2 , x.x - 124.5 , x.y + 99.4, x.w ));
+    return vec3( s , s1 , s2 );
+}
+
+#endif
+
+/*
+contributors: ["Patricio Gonzalez Vivo", "David Hoskins", "Inigo Quilez"]
+description: Pass a value and get some random normalize value between 0 and 1
+use: float random[2|3](<float|vec2|vec3> value)
+options:
+    - RANDOM_HIGHER_RANGE: for working with a range over 0 and 1
+    - RANDOM_SINLESS: Use sin-less random, which tolerates bigger values before producing pattern. From https://www.shadertoy.com/view/4djSRW
+    - RANDOM_SCALE: by default this scale if for number with a big range. For producing good random between 0 and 1 use bigger range
+examples:
+    - /shaders/generative_random.frag
+license:
+    - MIT License (MIT) Copyright 2014, David Hoskins
+*/
+
+#ifndef RANDOM_SCALE
+#ifdef RANDOM_HIGHER_RANGE
+#define RANDOM_SCALE vec4(.1031, .1030, .0973, .1099)
+#else
+#define RANDOM_SCALE vec4(443.897, 441.423, .0973, .1099)
+#endif
+#endif
+
+#ifndef FNC_RANDOM
+#define FNC_RANDOM
+float random(in float x) {
+#ifdef RANDOM_SINLESS
+    x = fract(x * RANDOM_SCALE.x);
+    x *= x + 33.33;
+    x *= x + x;
+    return fract(x);
+#else
+    return fract(sin(x) * 43758.5453);
+#endif
+}
+
+float random(in vec2 st) {
+#ifdef RANDOM_SINLESS
+    vec3 p3  = fract(vec3(st.xyx) * RANDOM_SCALE.xyz);
+    p3 += dot(p3, p3.yzx + 33.33);
+    return fract((p3.x + p3.y) * p3.z);
+#else
+    return fract(sin(dot(st.xy, vec2(12.9898, 78.233))) * 43758.5453);
+#endif
+}
+
+float random(in vec3 pos) {
+#ifdef RANDOM_SINLESS
+    pos  = fract(pos * RANDOM_SCALE.xyz);
+    pos += dot(pos, pos.zyx + 31.32);
+    return fract((pos.x + pos.y) * pos.z);
+#else
+    return fract(sin(dot(pos.xyz, vec3(70.9898, 78.233, 32.4355))) * 43758.5453123);
+#endif
+}
+
+float random(in vec4 pos) {
+#ifdef RANDOM_SINLESS
+    pos = fract(pos * RANDOM_SCALE);
+    pos += dot(pos, pos.wzxy + 33.33);
+    return fract((pos.x + pos.y) * (pos.z + pos.w));
+#else
+    float dot_product = dot(pos, vec4(12.9898,78.233,45.164,94.673));
+    return fract(sin(dot_product) * 43758.5453);
+#endif
+}
+
+vec2 random2(float p) {
+    vec3 p3 = fract(vec3(p) * RANDOM_SCALE.xyz);
+    p3 += dot(p3, p3.yzx + 19.19);
+    return fract((p3.xx + p3.yz) * p3.zy);
+}
+
+vec2 random2(vec2 p) {
+    vec3 p3 = fract(p.xyx * RANDOM_SCALE.xyz);
+    p3 += dot(p3, p3.yzx + 19.19);
+    return fract((p3.xx + p3.yz) * p3.zy);
+}
+
+vec2 random2(vec3 p3) {
+    p3 = fract(p3 * RANDOM_SCALE.xyz);
+    p3 += dot(p3, p3.yzx + 19.19);
+    return fract((p3.xx + p3.yz) * p3.zy);
+}
+
+vec3 random3(float p) {
+    vec3 p3 = fract(vec3(p) * RANDOM_SCALE.xyz);
+    p3 += dot(p3, p3.yzx + 19.19);
+    return fract((p3.xxy + p3.yzz) * p3.zyx); 
+}
+
+vec3 random3(vec2 p) {
+    vec3 p3 = fract(vec3(p.xyx) * RANDOM_SCALE.xyz);
+    p3 += dot(p3, p3.yxz + 19.19);
+    return fract((p3.xxy + p3.yzz) * p3.zyx);
+}
+
+vec3 random3(vec3 p) {
+    p = fract(p * RANDOM_SCALE.xyz);
+    p += dot(p, p.yxz + 19.19);
+    return fract((p.xxy + p.yzz) * p.zyx);
+}
+
+vec4 random4(float p) {
+    vec4 p4 = fract(p * RANDOM_SCALE);
+    p4 += dot(p4, p4.wzxy + 19.19);
+    return fract((p4.xxyz + p4.yzzw) * p4.zywx);   
+}
+
+vec4 random4(vec2 p) {
+    vec4 p4 = fract(p.xyxy * RANDOM_SCALE);
+    p4 += dot(p4, p4.wzxy + 19.19);
+    return fract((p4.xxyz + p4.yzzw) * p4.zywx);
+}
+
+vec4 random4(vec3 p) {
+    vec4 p4 = fract(p.xyzx * RANDOM_SCALE);
+    p4 += dot(p4, p4.wzxy + 19.19);
+    return fract((p4.xxyz + p4.yzzw) * p4.zywx);
+}
+
+vec4 random4(vec4 p4) {
+    p4 = fract(p4  * RANDOM_SCALE);
+    p4 += dot(p4, p4.wzxy + 19.19);
+    return fract((p4.xxyz + p4.yzzw) * p4.zywx);
+}
+#endif
+/*
+contributors: Patricio Gonzalez Vivo
+description: Signed Random
+use: srandomX(<vec2|vec3> x)
+license:
+    - Copyright (c) 2021 Patricio Gonzalez Vivo under Prosperity License - https://prosperitylicense.com/versions/3.0.0
+    - Copyright (c) 2021 Patricio Gonzalez Vivo under Patron License - https://lygia.xyz/license
+*/
+
+#ifndef FNC_SRANDOM
+#define FNC_SRANDOM
+
+float srandom(in float x) {
+  return -1. + 2. * fract(sin(x) * 43758.5453);
+}
+
+float srandom(in vec2 st) {
+  return -1. + 2. * fract(sin(dot(st.xy, vec2(12.9898, 78.233))) * 43758.5453);
+}
+
+float srandom(in vec3 pos) {
+  return -1. + 2. * fract(sin(dot(pos.xyz, vec3(70.9898, 78.233, 32.4355))) * 43758.5453123);
+}
+
+float srandom(in vec4 pos) {
+    float dot_product = dot(pos, vec4(12.9898,78.233,45.164,94.673));
+    return -1. + 2. * fract(sin(dot_product) * 43758.5453);
+}
+
+vec2 srandom2(in vec2 st) {
+    const vec2 k = vec2(.3183099, .3678794);
+    st = st * k + k.yx;
+    return -1. + 2. * fract(16. * k * fract(st.x * st.y * (st.x + st.y)));
+}
+
+vec3 srandom3(in vec3 p) {
+    p = vec3( dot(p, vec3(127.1, 311.7, 74.7)),
+            dot(p, vec3(269.5, 183.3, 246.1)),
+            dot(p, vec3(113.5, 271.9, 124.6)));
+    return -1. + 2. * fract(sin(p) * 43758.5453123);
+}
+
+vec2 srandom2(in vec2 p, const in float tileLength) {
+    p = mod(p, vec2(tileLength));
+    return srandom2(p);
+}
+
+vec3 srandom3(in vec3 p, const in float tileLength) {
+    p = mod(p, vec3(tileLength));
+    return srandom3(p);
+}
+
+#endif
+/*
+contributors: Inigo Quiles
+description: cubic polynomial https://iquilezles.org/articles/smoothsteps/
+use: <float|vec2|vec3|vec4> cubic(<float|vec2|vec3|vec4> value[, <float> in, <float> out]);
+examples:
+    - https://raw.githubusercontent.com/patriciogonzalezvivo/lygia_examples/main/math_functions.frag
+*/
+
+#ifndef FNC_CUBIC
+#define FNC_CUBIC 
+float cubic(const in float v) { return v*v*(3.0-2.0*v); }
+vec2  cubic(const in vec2 v)  { return v*v*(3.0-2.0*v); }
+vec3  cubic(const in vec3 v)  { return v*v*(3.0-2.0*v); }
+vec4  cubic(const in vec4 v)  { return v*v*(3.0-2.0*v); }
+
+float cubic(const in float v, in float slope0, in float slope1) {
+    float a = slope0 + slope1 - 2.;
+    float b = -2. * slope0 - slope1 + 3.;
+    float c = slope0;
+    float v2 = v * v;
+    float v3 = v * v2;
+    return a * v3 + b * v2 + c * v;
+}
+
+vec2 cubic(const in vec2 v, in float slope0, in float slope1) {
+    float a = slope0 + slope1 - 2.;
+    float b = -2. * slope0 - slope1 + 3.;
+    float c = slope0;
+    vec2 v2 = v * v;
+    vec2 v3 = v * v2;
+    return a * v3 + b * v2 + c * v;
+}
+
+vec3 cubic(const in vec3 v, in float slope0, in float slope1) {
+    float a = slope0 + slope1 - 2.;
+    float b = -2. * slope0 - slope1 + 3.;
+    float c = slope0;
+    vec3 v2 = v * v;
+    vec3 v3 = v * v2;
+    return a * v3 + b * v2 + c * v;
+}
+
+vec4 cubic(const in vec4 v, in float slope0, in float slope1) {
+    float a = slope0 + slope1 - 2.;
+    float b = -2. * slope0 - slope1 + 3.;
+    float c = slope0;
+    vec4 v2 = v * v;
+    vec4 v3 = v * v2;
+    return a * v3 + b * v2 + c * v;
+}
+#endif
+/*
+contributors: Inigo Quiles
+description: quintic polynomial https://iquilezles.org/articles/smoothsteps/
+use: <float|vec2|vec3|vec4> quintic(<float|vec2|vec3|vec4> value);
+examples:
+    - https://raw.githubusercontent.com/patriciogonzalezvivo/lygia_examples/main/math_functions.frag
+*/
+
+#ifndef FNC_QUINTIC
+#define FNC_QUINTIC 
+
+float quintic(const in float v) { return v*v*v*(v*(v*6.0-15.0)+10.0); }
+vec2  quintic(const in vec2 v)  { return v*v*v*(v*(v*6.0-15.0)+10.0); }
+vec3  quintic(const in vec3 v)  { return v*v*v*(v*(v*6.0-15.0)+10.0); }
+vec4  quintic(const in vec4 v)  { return v*v*v*(v*(v*6.0-15.0)+10.0); }
+
+#endif
+
+/*
+contributors: Patricio Gonzalez Vivo
+description: Gradient Noise
+use: gnoise(<float> x)
+license:
+    - Copyright (c) 2021 Patricio Gonzalez Vivo under Prosperity License - https://prosperitylicense.com/versions/3.0.0
+    - Copyright (c) 2021 Patricio Gonzalez Vivo under Patron License - https://lygia.xyz/license
+*/
+
+#ifndef FNC_GNOISE
+#define FNC_GNOISE
+
+float gnoise(float x) {
+    float i = floor(x);  // integer
+    float f = fract(x);  // fraction
+    return mix(random(i), random(i + 1.0), smoothstep(0.,1.,f)); 
+}
+
+float gnoise(vec2 st) {
+    vec2 i = floor(st);
+    vec2 f = fract(st);
+    float a = random(i);
+    float b = random(i + vec2(1.0, 0.0));
+    float c = random(i + vec2(0.0, 1.0));
+    float d = random(i + vec2(1.0, 1.0));
+    vec2 u = cubic(f);
+    return mix( a, b, u.x) +
+                (c - a)* u.y * (1.0 - u.x) +
+                (d - b) * u.x * u.y;
+}
+
+float gnoise(vec3 p) {
+    vec3 i = floor(p);
+    vec3 f = fract(p);
+    vec3 u = quintic(f);
+    return -1.0 + 2.0 * mix( mix( mix( random(i + vec3(0.0,0.0,0.0)), 
+                                        random(i + vec3(1.0,0.0,0.0)), u.x),
+                                mix( random(i + vec3(0.0,1.0,0.0)), 
+                                        random(i + vec3(1.0,1.0,0.0)), u.x), u.y),
+                            mix( mix( random(i + vec3(0.0,0.0,1.0)), 
+                                        random(i + vec3(1.0,0.0,1.0)), u.x),
+                                mix( random(i + vec3(0.0,1.0,1.0)), 
+                                        random(i + vec3(1.0,1.0,1.0)), u.x), u.y), u.z );
+}
+
+float gnoise(vec3 p, float tileLength) {
+    vec3 i = floor(p);
+    vec3 f = fract(p);
+            
+    vec3 u = quintic(f);
+        
+    return mix( mix( mix( dot( srandom3(i + vec3(0.0,0.0,0.0), tileLength), f - vec3(0.0,0.0,0.0)), 
+                            dot( srandom3(i + vec3(1.0,0.0,0.0), tileLength), f - vec3(1.0,0.0,0.0)), u.x),
+                    mix( dot( srandom3(i + vec3(0.0,1.0,0.0), tileLength), f - vec3(0.0,1.0,0.0)), 
+                            dot( srandom3(i + vec3(1.0,1.0,0.0), tileLength), f - vec3(1.0,1.0,0.0)), u.x), u.y),
+                mix( mix( dot( srandom3(i + vec3(0.0,0.0,1.0), tileLength), f - vec3(0.0,0.0,1.0)), 
+                            dot( srandom3(i + vec3(1.0,0.0,1.0), tileLength), f - vec3(1.0,0.0,1.0)), u.x),
+                    mix( dot( srandom3(i + vec3(0.0,1.0,1.0), tileLength), f - vec3(0.0,1.0,1.0)), 
+                            dot( srandom3(i + vec3(1.0,1.0,1.0), tileLength), f - vec3(1.0,1.0,1.0)), u.x), u.y), u.z );
+}
+
+vec3 gnoise3(vec3 x) {
+    return vec3(gnoise(x+vec3(123.456, 0.567, 0.37)),
+                gnoise(x+vec3(0.11, 47.43, 19.17)),
+                gnoise(x) );
+}
+
+#endif
+
+
+/*
+contributors: Patricio Gonzalez Vivo
+description: Fractal Brownian Motion
+use: fbm(<vec2> pos)
+options:
+    FBM_OCTAVES: numbers of octaves. Default is 4.
+    FBM_NOISE_FNC(UV): noise function to use Default 'snoise(UV)' (simplex noise)
+    FBM_VALUE_INITIAL: initial value. Default is 0.
+    FBM_SCALE_SCALAR: scalar. Default is 2.
+    FBM_AMPLITUDE_INITIAL: initial amplitude value. Default is 0.5
+    FBM_AMPLITUDE_SCALAR: amplitude scalar. Default is 0.5
+examples:
+    - /shaders/generative_fbm.frag
+license:
+    - Copyright (c) 2021 Patricio Gonzalez Vivo under Prosperity License - https://prosperitylicense.com/versions/3.0.0
+    - Copyright (c) 2021 Patricio Gonzalez Vivo under Patron License - https://lygia.xyz/license
+*/
+
+#ifndef FBM_OCTAVES
+#define FBM_OCTAVES 4
+#endif
+
+#ifndef FBM_NOISE_FNC
+#define FBM_NOISE_FNC(UV) snoise(UV)
+#endif
+
+#ifndef FBM_NOISE2_FNC
+#define FBM_NOISE2_FNC(UV) FBM_NOISE_FNC(UV)
+#endif
+
+#ifndef FBM_NOISE3_FNC
+#define FBM_NOISE3_FNC(UV) FBM_NOISE_FNC(UV)
+#endif
+
+#ifndef FBM_NOISE_TILABLE_FNC
+#define FBM_NOISE_TILABLE_FNC(UV, TILE) gnoise(UV, TILE)
+#endif
+
+#ifndef FBM_NOISE3_TILABLE_FNC
+#define FBM_NOISE3_TILABLE_FNC(UV, TILE) FBM_NOISE_TILABLE_FNC(UV, TILE)
+#endif
+
+#ifndef FBM_NOISE_TYPE
+#define FBM_NOISE_TYPE float
+#endif
+
+#ifndef FBM_VALUE_INITIAL
+#define FBM_VALUE_INITIAL 0.0
+#endif
+
+#ifndef FBM_SCALE_SCALAR
+#define FBM_SCALE_SCALAR 2.0
+#endif
+
+#ifndef FBM_AMPLITUDE_INITIAL
+#define FBM_AMPLITUDE_INITIAL 0.5
+#endif
+
+#ifndef FBM_AMPLITUDE_SCALAR
+#define FBM_AMPLITUDE_SCALAR 0.5
+#endif
+
+#ifndef FNC_FBM
+#define FNC_FBM
+FBM_NOISE_TYPE fbm(in vec2 st) {
+    // Initial values
+    FBM_NOISE_TYPE value = FBM_NOISE_TYPE(FBM_VALUE_INITIAL);
+    float amplitude = FBM_AMPLITUDE_INITIAL;
+
+    // Loop of octaves
+    for (int i = 0; i < FBM_OCTAVES; i++) {
+        value += amplitude * FBM_NOISE2_FNC(st);
+        st *= FBM_SCALE_SCALAR;
+        amplitude *= FBM_AMPLITUDE_SCALAR;
+    }
+    return value;
+}
+
+FBM_NOISE_TYPE fbm(in vec3 pos) {
+    // Initial values
+    FBM_NOISE_TYPE value = FBM_NOISE_TYPE(FBM_VALUE_INITIAL);
+    float amplitude = FBM_AMPLITUDE_INITIAL;
+
+    // Loop of octaves
+    for (int i = 0; i < FBM_OCTAVES; i++) {
+        value += amplitude * FBM_NOISE3_FNC(pos);
+        pos *= FBM_SCALE_SCALAR;
+        amplitude *= FBM_AMPLITUDE_SCALAR;
+    }
+    return value;
+}
+
+FBM_NOISE_TYPE fbm(vec3 p, float tileLength) {
+    const float persistence = 0.5;
+    const float lacunarity = 2.0;
+
+    float amplitude = 0.5;
+    FBM_NOISE_TYPE total = FBM_NOISE_TYPE(0.0);
+    float normalization = 0.0;
+
+    for (int i = 0; i < FBM_OCTAVES; ++i) {
+        float noiseValue = FBM_NOISE3_TILABLE_FNC(p, tileLength * lacunarity * 0.5) * 0.5 + 0.5;
+        total += noiseValue * amplitude;
+        normalization += amplitude;
+        amplitude *= persistence;
+        p = p * lacunarity;
+    }
+
+    return total / normalization;
+}
+#endif
+
+    void main() {}
+</script>
+<script id='d:/Github/MyShaders/Halucinetics/main.frag' type='x-shader/x-fragment'>
+uniform vec3        iResolution;
+uniform float       iTime;
+uniform float       iTimeDelta;
+uniform int         iFrame;
+uniform vec4        iDate;
+uniform vec3        iChannelResolution[10];
+uniform vec4        iMouse;
+uniform vec4        iMouseButton;
+uniform mat4        iViewMatrix;
+uniform sampler2D   iChannel0;
+uniform sampler2D   iChannel1;
+uniform sampler2D   iChannel2;
+uniform sampler2D   iChannel3;
+uniform sampler2D   iChannel4;
+uniform sampler2D   iChannel5;
+uniform sampler2D   iChannel6;
+uniform sampler2D   iChannel7;
+uniform sampler2D   iChannel8;
+uniform sampler2D   iChannel9;
+uniform sampler2D   iKeyboard;
+uniform float       iSampleRate;
+
+#define iGlobalTime iTime
+#define iGlobalFrame iFrame
+
+#define SHADER_TOY
+
+
+#ifdef GL_ES
+precision mediump float;
+#endif
+
+/*
+contributors: [Stefan Gustavson, Ian McEwan]
+description: modulus of 289
+use: <float|vec2|vec3|vec4> mod289(<float|vec2|vec3|vec4> x)
+*/
+
+#ifndef FNC_MOD289
+#define FNC_MOD289
+
+float mod289(const in float x) { return x - floor(x * (1. / 289.)) * 289.; }
+vec2 mod289(const in vec2 x) { return x - floor(x * (1. / 289.)) * 289.; }
+vec3 mod289(const in vec3 x) { return x - floor(x * (1. / 289.)) * 289.; }
+vec4 mod289(const in vec4 x) { return x - floor(x * (1. / 289.)) * 289.; }
+
+#endif
+
+/*
+contributors: [Stefan Gustavson, Ian McEwan]
+description: modulus of 289
+use: <float|vec2|vec3|vec4> mod289(<float|vec2|vec3|vec4> x)
+*/
+
+#ifndef FNC_MOD289
+#define FNC_MOD289
+
+float mod289(const in float x) { return x - floor(x * (1. / 289.)) * 289.; }
+vec2 mod289(const in vec2 x) { return x - floor(x * (1. / 289.)) * 289.; }
+vec3 mod289(const in vec3 x) { return x - floor(x * (1. / 289.)) * 289.; }
+vec4 mod289(const in vec4 x) { return x - floor(x * (1. / 289.)) * 289.; }
+
+#endif
+
+
+/*
+contributors: [Stefan Gustavson, Ian McEwan]
+description: permute
+use: <float|vec2|vec3|vec4> permute(<float|vec2|vec3|vec4> x)
+examples:
+    - https://raw.githubusercontent.com/patriciogonzalezvivo/lygia_examples/main/math_functions.frag
+*/
+
+#ifndef FNC_PERMUTE
+#define FNC_PERMUTE
+
+float permute(const in float v) { return mod289(((v * 34.0) + 1.0) * v); }
+vec2 permute(const in vec2 v) { return mod289(((v * 34.0) + 1.0) * v); }
+vec3 permute(const in vec3 v) { return mod289(((v * 34.0) + 1.0) * v); }
+vec4 permute(const in vec4 v) { return mod289(((v * 34.0) + 1.0) * v); }
+
+#endif
+
+/*
+contributors: [Stefan Gustavson, Ian McEwan]
+description: Fast, accurate inverse square root. 
+use: <float|vec2|vec3|vec4> taylorInvSqrt(<float|vec2|vec3|vec4> x)
+*/
+
+#ifndef FNC_TAYLORINVSQRT
+#define FNC_TAYLORINVSQRT
+float taylorInvSqrt(in float r) { return 1.79284291400159 - 0.85373472095314 * r; }
+vec2 taylorInvSqrt(in vec2 r) { return 1.79284291400159 - 0.85373472095314 * r; }
+vec3 taylorInvSqrt(in vec3 r) { return 1.79284291400159 - 0.85373472095314 * r; }
+vec4 taylorInvSqrt(in vec4 r) { return 1.79284291400159 - 0.85373472095314 * r; }
+#endif
+/*
+contributors: [Stefan Gustavson, Ian McEwan]
+description: grad4, used for snoise(vec4 v)
+use: grad4(<float> j, <vec4> ip)
+*/
+
+#ifndef FNC_GRAD4
+#define FNC_GRAD4
+vec4 grad4(float j, vec4 ip) {
+    const vec4 ones = vec4(1.0, 1.0, 1.0, -1.0);
+    vec4 p,s;
+    p.xyz = floor( fract (vec3(j) * ip.xyz) * 7.0) * ip.z - 1.0;
+    p.w = 1.5 - dot(abs(p.xyz), ones.xyz);
+    s = vec4(lessThan(p, vec4(0.0)));
+    p.xyz = p.xyz + (s.xyz*2.0 - 1.0) * s.www;
+    return p;
+}
+#endif
+
+
+/*
+contributors: [Stefan Gustavson, Ian McEwan]
+description: Simplex Noise https://github.com/stegu/webgl-noise
+use: snoise(<vec2|vec3|vec4> pos)
+license: |
+    Copyright 2021-2023 by Stefan Gustavson and Ian McEwan.
+    Published under the terms of the MIT license:
+    https://opensource.org/license/mit/
+examples:
+    - /shaders/generative_snoise.frag
+*/
+
+#ifndef FNC_SNOISE
+#define FNC_SNOISE
+float snoise(in vec2 v) {
+    const vec4 C = vec4(0.211324865405187,  // (3.0-sqrt(3.0))/6.0
+                        0.366025403784439,  // 0.5*(sqrt(3.0)-1.0)
+                        -0.577350269189626,  // -1.0 + 2.0 * C.x
+                        0.024390243902439); // 1.0 / 41.0
+    // First corner
+    vec2 i  = floor(v + dot(v, C.yy) );
+    vec2 x0 = v -   i + dot(i, C.xx);
+
+    // Other corners
+    vec2 i1;
+    //i1.x = step( x0.y, x0.x ); // x0.x > x0.y ? 1.0 : 0.0
+    //i1.y = 1.0 - i1.x;
+    i1 = (x0.x > x0.y) ? vec2(1.0, 0.0) : vec2(0.0, 1.0);
+    // x0 = x0 - 0.0 + 0.0 * C.xx ;
+    // x1 = x0 - i1 + 1.0 * C.xx ;
+    // x2 = x0 - 1.0 + 2.0 * C.xx ;
+    vec4 x12 = x0.xyxy + C.xxzz;
+    x12.xy -= i1;
+
+    // Permutations
+    i = mod289(i); // Avoid truncation effects in permutation
+    vec3 p = permute( permute( i.y + vec3(0.0, i1.y, 1.0 ))
+    + i.x + vec3(0.0, i1.x, 1.0 ));
+
+    vec3 m = max(0.5 - vec3(dot(x0,x0), dot(x12.xy,x12.xy), dot(x12.zw,x12.zw)), 0.0);
+    m = m*m ;
+    m = m*m ;
+
+    // Gradients: 41 points uniformly over a line, mapped onto a diamond.
+    // The ring size 17*17 = 289 is close to a multiple of 41 (41*7 = 287)
+
+    vec3 x = 2.0 * fract(p * C.www) - 1.0;
+    vec3 h = abs(x) - 0.5;
+    vec3 ox = floor(x + 0.5);
+    vec3 a0 = x - ox;
+
+    // Normalise gradients implicitly by scaling m
+    // Approximation of: m *= inversesqrt( a0*a0 + h*h );
+    m *= 1.79284291400159 - 0.85373472095314 * ( a0*a0 + h*h );
+
+    // Compute final noise value at P
+    vec3 g;
+    g.x  = a0.x  * x0.x  + h.x  * x0.y;
+    g.yz = a0.yz * x12.xz + h.yz * x12.yw;
+    return 130.0 * dot(m, g);
+}
+
+
+float snoise(in vec3 v) {
+    const vec2  C = vec2(1.0/6.0, 1.0/3.0) ;
+    const vec4  D = vec4(0.0, 0.5, 1.0, 2.0);
+
+    // First corner
+    vec3 i  = floor(v + dot(v, C.yyy) );
+    vec3 x0 =   v - i + dot(i, C.xxx) ;
+
+    // Other corners
+    vec3 g = step(x0.yzx, x0.xyz);
+    vec3 l = 1.0 - g;
+    vec3 i1 = min( g.xyz, l.zxy );
+    vec3 i2 = max( g.xyz, l.zxy );
+
+    //   x0 = x0 - 0.0 + 0.0 * C.xxx;
+    //   x1 = x0 - i1  + 1.0 * C.xxx;
+    //   x2 = x0 - i2  + 2.0 * C.xxx;
+    //   x3 = x0 - 1.0 + 3.0 * C.xxx;
+    vec3 x1 = x0 - i1 + C.xxx;
+    vec3 x2 = x0 - i2 + C.yyy; // 2.0*C.x = 1/3 = C.y
+    vec3 x3 = x0 - D.yyy;      // -1.0+3.0*C.x = -0.5 = -D.y
+
+    // Permutations
+    i = mod289(i);
+    vec4 p = permute( permute( permute(
+                i.z + vec4(0.0, i1.z, i2.z, 1.0 ))
+            + i.y + vec4(0.0, i1.y, i2.y, 1.0 ))
+            + i.x + vec4(0.0, i1.x, i2.x, 1.0 ));
+
+    // Gradients: 7x7 points over a square, mapped onto an octahedron.
+    // The ring size 17*17 = 289 is close to a multiple of 49 (49*6 = 294)
+    float n_ = 0.142857142857; // 1.0/7.0
+    vec3  ns = n_ * D.wyz - D.xzx;
+
+    vec4 j = p - 49.0 * floor(p * ns.z * ns.z);  //  mod(p,7*7)
+
+    vec4 x_ = floor(j * ns.z);
+    vec4 y_ = floor(j - 7.0 * x_ );    // mod(j,N)
+
+    vec4 x = x_ *ns.x + ns.yyyy;
+    vec4 y = y_ *ns.x + ns.yyyy;
+    vec4 h = 1.0 - abs(x) - abs(y);
+
+    vec4 b0 = vec4( x.xy, y.xy );
+    vec4 b1 = vec4( x.zw, y.zw );
+
+    //vec4 s0 = vec4(lessThan(b0,0.0))*2.0 - 1.0;
+    //vec4 s1 = vec4(lessThan(b1,0.0))*2.0 - 1.0;
+    vec4 s0 = floor(b0)*2.0 + 1.0;
+    vec4 s1 = floor(b1)*2.0 + 1.0;
+    vec4 sh = -step(h, vec4(0.0));
+
+    vec4 a0 = b0.xzyw + s0.xzyw*sh.xxyy ;
+    vec4 a1 = b1.xzyw + s1.xzyw*sh.zzww ;
+
+    vec3 p0 = vec3(a0.xy,h.x);
+    vec3 p1 = vec3(a0.zw,h.y);
+    vec3 p2 = vec3(a1.xy,h.z);
+    vec3 p3 = vec3(a1.zw,h.w);
+
+    //Normalise gradients
+    vec4 norm = taylorInvSqrt(vec4(dot(p0,p0), dot(p1,p1), dot(p2, p2), dot(p3,p3)));
+    p0 *= norm.x;
+    p1 *= norm.y;
+    p2 *= norm.z;
+    p3 *= norm.w;
+
+    // Mix final noise value
+    vec4 m = max(0.6 - vec4(dot(x0,x0), dot(x1,x1), dot(x2,x2), dot(x3,x3)), 0.0);
+    m = m * m;
+    return 42.0 * dot( m*m, vec4( dot(p0,x0), dot(p1,x1),
+                                dot(p2,x2), dot(p3,x3) ) );
+}
+
+float snoise(in vec4 v) {
+    const vec4  C = vec4( 0.138196601125011,  // (5 - sqrt(5))/20  G4
+                        0.276393202250021,  // 2 * G4
+                        0.414589803375032,  // 3 * G4
+                        -0.447213595499958); // -1 + 4 * G4
+
+    // First corner
+    vec4 i  = floor(v + dot(v, vec4(.309016994374947451)) ); // (sqrt(5) - 1)/4
+    vec4 x0 = v -   i + dot(i, C.xxxx);
+
+    // Other corners
+
+    // Rank sorting originally contributed by Bill Licea-Kane, AMD (formerly ATI)
+    vec4 i0;
+    vec3 isX = step( x0.yzw, x0.xxx );
+    vec3 isYZ = step( x0.zww, x0.yyz );
+    //  i0.x = dot( isX, vec3( 1.0 ) );
+    i0.x = isX.x + isX.y + isX.z;
+    i0.yzw = 1.0 - isX;
+    //  i0.y += dot( isYZ.xy, vec2( 1.0 ) );
+    i0.y += isYZ.x + isYZ.y;
+    i0.zw += 1.0 - isYZ.xy;
+    i0.z += isYZ.z;
+    i0.w += 1.0 - isYZ.z;
+
+    // i0 now contains the unique values 0,1,2,3 in each channel
+    vec4 i3 = clamp( i0, 0.0, 1.0 );
+    vec4 i2 = clamp( i0-1.0, 0.0, 1.0 );
+    vec4 i1 = clamp( i0-2.0, 0.0, 1.0 );
+
+    //  x0 = x0 - 0.0 + 0.0 * C.xxxx
+    //  x1 = x0 - i1  + 1.0 * C.xxxx
+    //  x2 = x0 - i2  + 2.0 * C.xxxx
+    //  x3 = x0 - i3  + 3.0 * C.xxxx
+    //  x4 = x0 - 1.0 + 4.0 * C.xxxx
+    vec4 x1 = x0 - i1 + C.xxxx;
+    vec4 x2 = x0 - i2 + C.yyyy;
+    vec4 x3 = x0 - i3 + C.zzzz;
+    vec4 x4 = x0 + C.wwww;
+
+    // Permutations
+    i = mod289(i);
+    float j0 = permute( permute( permute( permute(i.w) + i.z) + i.y) + i.x);
+    vec4 j1 = permute( permute( permute( permute (
+                i.w + vec4(i1.w, i2.w, i3.w, 1.0 ))
+            + i.z + vec4(i1.z, i2.z, i3.z, 1.0 ))
+            + i.y + vec4(i1.y, i2.y, i3.y, 1.0 ))
+            + i.x + vec4(i1.x, i2.x, i3.x, 1.0 ));
+
+    // Gradients: 7x7x6 points over a cube, mapped onto a 4-cross polytope
+    // 7*7*6 = 294, which is close to the ring size 17*17 = 289.
+    vec4 ip = vec4(1.0/294.0, 1.0/49.0, 1.0/7.0, 0.0) ;
+
+    vec4 p0 = grad4(j0,   ip);
+    vec4 p1 = grad4(j1.x, ip);
+    vec4 p2 = grad4(j1.y, ip);
+    vec4 p3 = grad4(j1.z, ip);
+    vec4 p4 = grad4(j1.w, ip);
+
+    // Normalise gradients
+    vec4 norm = taylorInvSqrt(vec4(dot(p0,p0), dot(p1,p1), dot(p2, p2), dot(p3,p3)));
+    p0 *= norm.x;
+    p1 *= norm.y;
+    p2 *= norm.z;
+    p3 *= norm.w;
+    p4 *= taylorInvSqrt(dot(p4,p4));
+
+    // Mix contributions from the five corners
+    vec3 m0 = max(0.6 - vec3(dot(x0,x0), dot(x1,x1), dot(x2,x2)), 0.0);
+    vec2 m1 = max(0.6 - vec2(dot(x3,x3), dot(x4,x4)            ), 0.0);
+    m0 = m0 * m0;
+    m1 = m1 * m1;
+    return 49.0 * ( dot(m0*m0, vec3( dot( p0, x0 ), dot( p1, x1 ), dot( p2, x2 )))
+                + dot(m1*m1, vec2( dot( p3, x3 ), dot( p4, x4 ) ) ) ) ;
+}
+
+vec2 snoise2( vec2 x ){
+    float s  = snoise(vec2( x ));
+    float s1 = snoise(vec2( x.y - 19.1, x.x + 47.2 ));
+    return vec2( s , s1 );
+}
+
+vec3 snoise3( vec3 x ){
+    float s  = snoise(vec3( x ));
+    float s1 = snoise(vec3( x.y - 19.1 , x.z + 33.4 , x.x + 47.2 ));
+    float s2 = snoise(vec3( x.z + 74.2 , x.x - 124.5 , x.y + 99.4 ));
+    return vec3( s , s1 , s2 );
+}
+
+vec3 snoise3( vec4 x ){
+    float s  = snoise(vec4( x ));
+    float s1 = snoise(vec4( x.y - 19.1 , x.z + 33.4 , x.x + 47.2, x.w ));
+    float s2 = snoise(vec4( x.z + 74.2 , x.x - 124.5 , x.y + 99.4, x.w ));
+    return vec3( s , s1 , s2 );
+}
+
+#endif
+
+/*
+contributors: ["Patricio Gonzalez Vivo", "David Hoskins", "Inigo Quilez"]
+description: Pass a value and get some random normalize value between 0 and 1
+use: float random[2|3](<float|vec2|vec3> value)
+options:
+    - RANDOM_HIGHER_RANGE: for working with a range over 0 and 1
+    - RANDOM_SINLESS: Use sin-less random, which tolerates bigger values before producing pattern. From https://www.shadertoy.com/view/4djSRW
+    - RANDOM_SCALE: by default this scale if for number with a big range. For producing good random between 0 and 1 use bigger range
+examples:
+    - /shaders/generative_random.frag
+license:
+    - MIT License (MIT) Copyright 2014, David Hoskins
+*/
+
+#ifndef RANDOM_SCALE
+#ifdef RANDOM_HIGHER_RANGE
+#define RANDOM_SCALE vec4(.1031, .1030, .0973, .1099)
+#else
+#define RANDOM_SCALE vec4(443.897, 441.423, .0973, .1099)
+#endif
+#endif
+
+#ifndef FNC_RANDOM
+#define FNC_RANDOM
+float random(in float x) {
+#ifdef RANDOM_SINLESS
+    x = fract(x * RANDOM_SCALE.x);
+    x *= x + 33.33;
+    x *= x + x;
+    return fract(x);
+#else
+    return fract(sin(x) * 43758.5453);
+#endif
+}
+
+float random(in vec2 st) {
+#ifdef RANDOM_SINLESS
+    vec3 p3  = fract(vec3(st.xyx) * RANDOM_SCALE.xyz);
+    p3 += dot(p3, p3.yzx + 33.33);
+    return fract((p3.x + p3.y) * p3.z);
+#else
+    return fract(sin(dot(st.xy, vec2(12.9898, 78.233))) * 43758.5453);
+#endif
+}
+
+float random(in vec3 pos) {
+#ifdef RANDOM_SINLESS
+    pos  = fract(pos * RANDOM_SCALE.xyz);
+    pos += dot(pos, pos.zyx + 31.32);
+    return fract((pos.x + pos.y) * pos.z);
+#else
+    return fract(sin(dot(pos.xyz, vec3(70.9898, 78.233, 32.4355))) * 43758.5453123);
+#endif
+}
+
+float random(in vec4 pos) {
+#ifdef RANDOM_SINLESS
+    pos = fract(pos * RANDOM_SCALE);
+    pos += dot(pos, pos.wzxy + 33.33);
+    return fract((pos.x + pos.y) * (pos.z + pos.w));
+#else
+    float dot_product = dot(pos, vec4(12.9898,78.233,45.164,94.673));
+    return fract(sin(dot_product) * 43758.5453);
+#endif
+}
+
+vec2 random2(float p) {
+    vec3 p3 = fract(vec3(p) * RANDOM_SCALE.xyz);
+    p3 += dot(p3, p3.yzx + 19.19);
+    return fract((p3.xx + p3.yz) * p3.zy);
+}
+
+vec2 random2(vec2 p) {
+    vec3 p3 = fract(p.xyx * RANDOM_SCALE.xyz);
+    p3 += dot(p3, p3.yzx + 19.19);
+    return fract((p3.xx + p3.yz) * p3.zy);
+}
+
+vec2 random2(vec3 p3) {
+    p3 = fract(p3 * RANDOM_SCALE.xyz);
+    p3 += dot(p3, p3.yzx + 19.19);
+    return fract((p3.xx + p3.yz) * p3.zy);
+}
+
+vec3 random3(float p) {
+    vec3 p3 = fract(vec3(p) * RANDOM_SCALE.xyz);
+    p3 += dot(p3, p3.yzx + 19.19);
+    return fract((p3.xxy + p3.yzz) * p3.zyx); 
+}
+
+vec3 random3(vec2 p) {
+    vec3 p3 = fract(vec3(p.xyx) * RANDOM_SCALE.xyz);
+    p3 += dot(p3, p3.yxz + 19.19);
+    return fract((p3.xxy + p3.yzz) * p3.zyx);
+}
+
+vec3 random3(vec3 p) {
+    p = fract(p * RANDOM_SCALE.xyz);
+    p += dot(p, p.yxz + 19.19);
+    return fract((p.xxy + p.yzz) * p.zyx);
+}
+
+vec4 random4(float p) {
+    vec4 p4 = fract(p * RANDOM_SCALE);
+    p4 += dot(p4, p4.wzxy + 19.19);
+    return fract((p4.xxyz + p4.yzzw) * p4.zywx);   
+}
+
+vec4 random4(vec2 p) {
+    vec4 p4 = fract(p.xyxy * RANDOM_SCALE);
+    p4 += dot(p4, p4.wzxy + 19.19);
+    return fract((p4.xxyz + p4.yzzw) * p4.zywx);
+}
+
+vec4 random4(vec3 p) {
+    vec4 p4 = fract(p.xyzx * RANDOM_SCALE);
+    p4 += dot(p4, p4.wzxy + 19.19);
+    return fract((p4.xxyz + p4.yzzw) * p4.zywx);
+}
+
+vec4 random4(vec4 p4) {
+    p4 = fract(p4  * RANDOM_SCALE);
+    p4 += dot(p4, p4.wzxy + 19.19);
+    return fract((p4.xxyz + p4.yzzw) * p4.zywx);
+}
+#endif
+/*
+contributors: Patricio Gonzalez Vivo
+description: Signed Random
+use: srandomX(<vec2|vec3> x)
+license:
+    - Copyright (c) 2021 Patricio Gonzalez Vivo under Prosperity License - https://prosperitylicense.com/versions/3.0.0
+    - Copyright (c) 2021 Patricio Gonzalez Vivo under Patron License - https://lygia.xyz/license
+*/
+
+#ifndef FNC_SRANDOM
+#define FNC_SRANDOM
+
+float srandom(in float x) {
+  return -1. + 2. * fract(sin(x) * 43758.5453);
+}
+
+float srandom(in vec2 st) {
+  return -1. + 2. * fract(sin(dot(st.xy, vec2(12.9898, 78.233))) * 43758.5453);
+}
+
+float srandom(in vec3 pos) {
+  return -1. + 2. * fract(sin(dot(pos.xyz, vec3(70.9898, 78.233, 32.4355))) * 43758.5453123);
+}
+
+float srandom(in vec4 pos) {
+    float dot_product = dot(pos, vec4(12.9898,78.233,45.164,94.673));
+    return -1. + 2. * fract(sin(dot_product) * 43758.5453);
+}
+
+vec2 srandom2(in vec2 st) {
+    const vec2 k = vec2(.3183099, .3678794);
+    st = st * k + k.yx;
+    return -1. + 2. * fract(16. * k * fract(st.x * st.y * (st.x + st.y)));
+}
+
+vec3 srandom3(in vec3 p) {
+    p = vec3( dot(p, vec3(127.1, 311.7, 74.7)),
+            dot(p, vec3(269.5, 183.3, 246.1)),
+            dot(p, vec3(113.5, 271.9, 124.6)));
+    return -1. + 2. * fract(sin(p) * 43758.5453123);
+}
+
+vec2 srandom2(in vec2 p, const in float tileLength) {
+    p = mod(p, vec2(tileLength));
+    return srandom2(p);
+}
+
+vec3 srandom3(in vec3 p, const in float tileLength) {
+    p = mod(p, vec3(tileLength));
+    return srandom3(p);
+}
+
+#endif
+/*
+contributors: Inigo Quiles
+description: cubic polynomial https://iquilezles.org/articles/smoothsteps/
+use: <float|vec2|vec3|vec4> cubic(<float|vec2|vec3|vec4> value[, <float> in, <float> out]);
+examples:
+    - https://raw.githubusercontent.com/patriciogonzalezvivo/lygia_examples/main/math_functions.frag
+*/
+
+#ifndef FNC_CUBIC
+#define FNC_CUBIC 
+float cubic(const in float v) { return v*v*(3.0-2.0*v); }
+vec2  cubic(const in vec2 v)  { return v*v*(3.0-2.0*v); }
+vec3  cubic(const in vec3 v)  { return v*v*(3.0-2.0*v); }
+vec4  cubic(const in vec4 v)  { return v*v*(3.0-2.0*v); }
+
+float cubic(const in float v, in float slope0, in float slope1) {
+    float a = slope0 + slope1 - 2.;
+    float b = -2. * slope0 - slope1 + 3.;
+    float c = slope0;
+    float v2 = v * v;
+    float v3 = v * v2;
+    return a * v3 + b * v2 + c * v;
+}
+
+vec2 cubic(const in vec2 v, in float slope0, in float slope1) {
+    float a = slope0 + slope1 - 2.;
+    float b = -2. * slope0 - slope1 + 3.;
+    float c = slope0;
+    vec2 v2 = v * v;
+    vec2 v3 = v * v2;
+    return a * v3 + b * v2 + c * v;
+}
+
+vec3 cubic(const in vec3 v, in float slope0, in float slope1) {
+    float a = slope0 + slope1 - 2.;
+    float b = -2. * slope0 - slope1 + 3.;
+    float c = slope0;
+    vec3 v2 = v * v;
+    vec3 v3 = v * v2;
+    return a * v3 + b * v2 + c * v;
+}
+
+vec4 cubic(const in vec4 v, in float slope0, in float slope1) {
+    float a = slope0 + slope1 - 2.;
+    float b = -2. * slope0 - slope1 + 3.;
+    float c = slope0;
+    vec4 v2 = v * v;
+    vec4 v3 = v * v2;
+    return a * v3 + b * v2 + c * v;
+}
+#endif
+/*
+contributors: Inigo Quiles
+description: quintic polynomial https://iquilezles.org/articles/smoothsteps/
+use: <float|vec2|vec3|vec4> quintic(<float|vec2|vec3|vec4> value);
+examples:
+    - https://raw.githubusercontent.com/patriciogonzalezvivo/lygia_examples/main/math_functions.frag
+*/
+
+#ifndef FNC_QUINTIC
+#define FNC_QUINTIC 
+
+float quintic(const in float v) { return v*v*v*(v*(v*6.0-15.0)+10.0); }
+vec2  quintic(const in vec2 v)  { return v*v*v*(v*(v*6.0-15.0)+10.0); }
+vec3  quintic(const in vec3 v)  { return v*v*v*(v*(v*6.0-15.0)+10.0); }
+vec4  quintic(const in vec4 v)  { return v*v*v*(v*(v*6.0-15.0)+10.0); }
+
+#endif
+
+/*
+contributors: Patricio Gonzalez Vivo
+description: Gradient Noise
+use: gnoise(<float> x)
+license:
+    - Copyright (c) 2021 Patricio Gonzalez Vivo under Prosperity License - https://prosperitylicense.com/versions/3.0.0
+    - Copyright (c) 2021 Patricio Gonzalez Vivo under Patron License - https://lygia.xyz/license
+*/
+
+#ifndef FNC_GNOISE
+#define FNC_GNOISE
+
+float gnoise(float x) {
+    float i = floor(x);  // integer
+    float f = fract(x);  // fraction
+    return mix(random(i), random(i + 1.0), smoothstep(0.,1.,f)); 
+}
+
+float gnoise(vec2 st) {
+    vec2 i = floor(st);
+    vec2 f = fract(st);
+    float a = random(i);
+    float b = random(i + vec2(1.0, 0.0));
+    float c = random(i + vec2(0.0, 1.0));
+    float d = random(i + vec2(1.0, 1.0));
+    vec2 u = cubic(f);
+    return mix( a, b, u.x) +
+                (c - a)* u.y * (1.0 - u.x) +
+                (d - b) * u.x * u.y;
+}
+
+float gnoise(vec3 p) {
+    vec3 i = floor(p);
+    vec3 f = fract(p);
+    vec3 u = quintic(f);
+    return -1.0 + 2.0 * mix( mix( mix( random(i + vec3(0.0,0.0,0.0)), 
+                                        random(i + vec3(1.0,0.0,0.0)), u.x),
+                                mix( random(i + vec3(0.0,1.0,0.0)), 
+                                        random(i + vec3(1.0,1.0,0.0)), u.x), u.y),
+                            mix( mix( random(i + vec3(0.0,0.0,1.0)), 
+                                        random(i + vec3(1.0,0.0,1.0)), u.x),
+                                mix( random(i + vec3(0.0,1.0,1.0)), 
+                                        random(i + vec3(1.0,1.0,1.0)), u.x), u.y), u.z );
+}
+
+float gnoise(vec3 p, float tileLength) {
+    vec3 i = floor(p);
+    vec3 f = fract(p);
+            
+    vec3 u = quintic(f);
+        
+    return mix( mix( mix( dot( srandom3(i + vec3(0.0,0.0,0.0), tileLength), f - vec3(0.0,0.0,0.0)), 
+                            dot( srandom3(i + vec3(1.0,0.0,0.0), tileLength), f - vec3(1.0,0.0,0.0)), u.x),
+                    mix( dot( srandom3(i + vec3(0.0,1.0,0.0), tileLength), f - vec3(0.0,1.0,0.0)), 
+                            dot( srandom3(i + vec3(1.0,1.0,0.0), tileLength), f - vec3(1.0,1.0,0.0)), u.x), u.y),
+                mix( mix( dot( srandom3(i + vec3(0.0,0.0,1.0), tileLength), f - vec3(0.0,0.0,1.0)), 
+                            dot( srandom3(i + vec3(1.0,0.0,1.0), tileLength), f - vec3(1.0,0.0,1.0)), u.x),
+                    mix( dot( srandom3(i + vec3(0.0,1.0,1.0), tileLength), f - vec3(0.0,1.0,1.0)), 
+                            dot( srandom3(i + vec3(1.0,1.0,1.0), tileLength), f - vec3(1.0,1.0,1.0)), u.x), u.y), u.z );
+}
+
+vec3 gnoise3(vec3 x) {
+    return vec3(gnoise(x+vec3(123.456, 0.567, 0.37)),
+                gnoise(x+vec3(0.11, 47.43, 19.17)),
+                gnoise(x) );
+}
+
+#endif
+
+
+/*
+contributors: Patricio Gonzalez Vivo
+description: Fractal Brownian Motion
+use: fbm(<vec2> pos)
+options:
+    FBM_OCTAVES: numbers of octaves. Default is 4.
+    FBM_NOISE_FNC(UV): noise function to use Default 'snoise(UV)' (simplex noise)
+    FBM_VALUE_INITIAL: initial value. Default is 0.
+    FBM_SCALE_SCALAR: scalar. Default is 2.
+    FBM_AMPLITUDE_INITIAL: initial amplitude value. Default is 0.5
+    FBM_AMPLITUDE_SCALAR: amplitude scalar. Default is 0.5
+examples:
+    - /shaders/generative_fbm.frag
+license:
+    - Copyright (c) 2021 Patricio Gonzalez Vivo under Prosperity License - https://prosperitylicense.com/versions/3.0.0
+    - Copyright (c) 2021 Patricio Gonzalez Vivo under Patron License - https://lygia.xyz/license
+*/
+
+#ifndef FBM_OCTAVES
+#define FBM_OCTAVES 4
+#endif
+
+#ifndef FBM_NOISE_FNC
+#define FBM_NOISE_FNC(UV) snoise(UV)
+#endif
+
+#ifndef FBM_NOISE2_FNC
+#define FBM_NOISE2_FNC(UV) FBM_NOISE_FNC(UV)
+#endif
+
+#ifndef FBM_NOISE3_FNC
+#define FBM_NOISE3_FNC(UV) FBM_NOISE_FNC(UV)
+#endif
+
+#ifndef FBM_NOISE_TILABLE_FNC
+#define FBM_NOISE_TILABLE_FNC(UV, TILE) gnoise(UV, TILE)
+#endif
+
+#ifndef FBM_NOISE3_TILABLE_FNC
+#define FBM_NOISE3_TILABLE_FNC(UV, TILE) FBM_NOISE_TILABLE_FNC(UV, TILE)
+#endif
+
+#ifndef FBM_NOISE_TYPE
+#define FBM_NOISE_TYPE float
+#endif
+
+#ifndef FBM_VALUE_INITIAL
+#define FBM_VALUE_INITIAL 0.0
+#endif
+
+#ifndef FBM_SCALE_SCALAR
+#define FBM_SCALE_SCALAR 2.0
+#endif
+
+#ifndef FBM_AMPLITUDE_INITIAL
+#define FBM_AMPLITUDE_INITIAL 0.5
+#endif
+
+#ifndef FBM_AMPLITUDE_SCALAR
+#define FBM_AMPLITUDE_SCALAR 0.5
+#endif
+
+#ifndef FNC_FBM
+#define FNC_FBM
+FBM_NOISE_TYPE fbm(in vec2 st) {
+    // Initial values
+    FBM_NOISE_TYPE value = FBM_NOISE_TYPE(FBM_VALUE_INITIAL);
+    float amplitude = FBM_AMPLITUDE_INITIAL;
+
+    // Loop of octaves
+    for (int i = 0; i < FBM_OCTAVES; i++) {
+        value += amplitude * FBM_NOISE2_FNC(st);
+        st *= FBM_SCALE_SCALAR;
+        amplitude *= FBM_AMPLITUDE_SCALAR;
+    }
+    return value;
+}
+
+FBM_NOISE_TYPE fbm(in vec3 pos) {
+    // Initial values
+    FBM_NOISE_TYPE value = FBM_NOISE_TYPE(FBM_VALUE_INITIAL);
+    float amplitude = FBM_AMPLITUDE_INITIAL;
+
+    // Loop of octaves
+    for (int i = 0; i < FBM_OCTAVES; i++) {
+        value += amplitude * FBM_NOISE3_FNC(pos);
+        pos *= FBM_SCALE_SCALAR;
+        amplitude *= FBM_AMPLITUDE_SCALAR;
+    }
+    return value;
+}
+
+FBM_NOISE_TYPE fbm(vec3 p, float tileLength) {
+    const float persistence = 0.5;
+    const float lacunarity = 2.0;
+
+    float amplitude = 0.5;
+    FBM_NOISE_TYPE total = FBM_NOISE_TYPE(0.0);
+    float normalization = 0.0;
+
+    for (int i = 0; i < FBM_OCTAVES; ++i) {
+        float noiseValue = FBM_NOISE3_TILABLE_FNC(p, tileLength * lacunarity * 0.5) * 0.5 + 0.5;
+        total += noiseValue * amplitude;
+        normalization += amplitude;
+        amplitude *= persistence;
+        p = p * lacunarity;
+    }
+
+    return total / normalization;
+}
+#endif
+
+/*
+contributors: [Stefan Gustavson, Ian McEwan]
+description: modulus of 289
+use: <float|vec2|vec3|vec4> mod289(<float|vec2|vec3|vec4> x)
+*/
+
+#ifndef FNC_MOD289
+#define FNC_MOD289
+
+float mod289(const in float x) { return x - floor(x * (1. / 289.)) * 289.; }
+vec2 mod289(const in vec2 x) { return x - floor(x * (1. / 289.)) * 289.; }
+vec3 mod289(const in vec3 x) { return x - floor(x * (1. / 289.)) * 289.; }
+vec4 mod289(const in vec4 x) { return x - floor(x * (1. / 289.)) * 289.; }
+
+#endif
+
+/*
+contributors: [Stefan Gustavson, Ian McEwan]
+description: modulus of 289
+use: <float|vec2|vec3|vec4> mod289(<float|vec2|vec3|vec4> x)
+*/
+
+#ifndef FNC_MOD289
+#define FNC_MOD289
+
+float mod289(const in float x) { return x - floor(x * (1. / 289.)) * 289.; }
+vec2 mod289(const in vec2 x) { return x - floor(x * (1. / 289.)) * 289.; }
+vec3 mod289(const in vec3 x) { return x - floor(x * (1. / 289.)) * 289.; }
+vec4 mod289(const in vec4 x) { return x - floor(x * (1. / 289.)) * 289.; }
+
+#endif
+
+
+/*
+contributors: [Stefan Gustavson, Ian McEwan]
+description: permute
+use: <float|vec2|vec3|vec4> permute(<float|vec2|vec3|vec4> x)
+examples:
+    - https://raw.githubusercontent.com/patriciogonzalezvivo/lygia_examples/main/math_functions.frag
+*/
+
+#ifndef FNC_PERMUTE
+#define FNC_PERMUTE
+
+float permute(const in float v) { return mod289(((v * 34.0) + 1.0) * v); }
+vec2 permute(const in vec2 v) { return mod289(((v * 34.0) + 1.0) * v); }
+vec3 permute(const in vec3 v) { return mod289(((v * 34.0) + 1.0) * v); }
+vec4 permute(const in vec4 v) { return mod289(((v * 34.0) + 1.0) * v); }
+
+#endif
+
+/*
+contributors: [Stefan Gustavson, Ian McEwan]
+description: Fast, accurate inverse square root. 
+use: <float|vec2|vec3|vec4> taylorInvSqrt(<float|vec2|vec3|vec4> x)
+*/
+
+#ifndef FNC_TAYLORINVSQRT
+#define FNC_TAYLORINVSQRT
+float taylorInvSqrt(in float r) { return 1.79284291400159 - 0.85373472095314 * r; }
+vec2 taylorInvSqrt(in vec2 r) { return 1.79284291400159 - 0.85373472095314 * r; }
+vec3 taylorInvSqrt(in vec3 r) { return 1.79284291400159 - 0.85373472095314 * r; }
+vec4 taylorInvSqrt(in vec4 r) { return 1.79284291400159 - 0.85373472095314 * r; }
+#endif
+/*
+contributors: [Stefan Gustavson, Ian McEwan]
+description: grad4, used for snoise(vec4 v)
+use: grad4(<float> j, <vec4> ip)
+*/
+
+#ifndef FNC_GRAD4
+#define FNC_GRAD4
+vec4 grad4(float j, vec4 ip) {
+    const vec4 ones = vec4(1.0, 1.0, 1.0, -1.0);
+    vec4 p,s;
+    p.xyz = floor( fract (vec3(j) * ip.xyz) * 7.0) * ip.z - 1.0;
+    p.w = 1.5 - dot(abs(p.xyz), ones.xyz);
+    s = vec4(lessThan(p, vec4(0.0)));
+    p.xyz = p.xyz + (s.xyz*2.0 - 1.0) * s.www;
+    return p;
+}
+#endif
+
+
+/*
+contributors: [Stefan Gustavson, Ian McEwan]
+description: Simplex Noise https://github.com/stegu/webgl-noise
+use: snoise(<vec2|vec3|vec4> pos)
+license: |
+    Copyright 2021-2023 by Stefan Gustavson and Ian McEwan.
+    Published under the terms of the MIT license:
+    https://opensource.org/license/mit/
+examples:
+    - /shaders/generative_snoise.frag
+*/
+
+#ifndef FNC_SNOISE
+#define FNC_SNOISE
+float snoise(in vec2 v) {
+    const vec4 C = vec4(0.211324865405187,  // (3.0-sqrt(3.0))/6.0
+                        0.366025403784439,  // 0.5*(sqrt(3.0)-1.0)
+                        -0.577350269189626,  // -1.0 + 2.0 * C.x
+                        0.024390243902439); // 1.0 / 41.0
+    // First corner
+    vec2 i  = floor(v + dot(v, C.yy) );
+    vec2 x0 = v -   i + dot(i, C.xx);
+
+    // Other corners
+    vec2 i1;
+    //i1.x = step( x0.y, x0.x ); // x0.x > x0.y ? 1.0 : 0.0
+    //i1.y = 1.0 - i1.x;
+    i1 = (x0.x > x0.y) ? vec2(1.0, 0.0) : vec2(0.0, 1.0);
+    // x0 = x0 - 0.0 + 0.0 * C.xx ;
+    // x1 = x0 - i1 + 1.0 * C.xx ;
+    // x2 = x0 - 1.0 + 2.0 * C.xx ;
+    vec4 x12 = x0.xyxy + C.xxzz;
+    x12.xy -= i1;
+
+    // Permutations
+    i = mod289(i); // Avoid truncation effects in permutation
+    vec3 p = permute( permute( i.y + vec3(0.0, i1.y, 1.0 ))
+    + i.x + vec3(0.0, i1.x, 1.0 ));
+
+    vec3 m = max(0.5 - vec3(dot(x0,x0), dot(x12.xy,x12.xy), dot(x12.zw,x12.zw)), 0.0);
+    m = m*m ;
+    m = m*m ;
+
+    // Gradients: 41 points uniformly over a line, mapped onto a diamond.
+    // The ring size 17*17 = 289 is close to a multiple of 41 (41*7 = 287)
+
+    vec3 x = 2.0 * fract(p * C.www) - 1.0;
+    vec3 h = abs(x) - 0.5;
+    vec3 ox = floor(x + 0.5);
+    vec3 a0 = x - ox;
+
+    // Normalise gradients implicitly by scaling m
+    // Approximation of: m *= inversesqrt( a0*a0 + h*h );
+    m *= 1.79284291400159 - 0.85373472095314 * ( a0*a0 + h*h );
+
+    // Compute final noise value at P
+    vec3 g;
+    g.x  = a0.x  * x0.x  + h.x  * x0.y;
+    g.yz = a0.yz * x12.xz + h.yz * x12.yw;
+    return 130.0 * dot(m, g);
+}
+
+
+float snoise(in vec3 v) {
+    const vec2  C = vec2(1.0/6.0, 1.0/3.0) ;
+    const vec4  D = vec4(0.0, 0.5, 1.0, 2.0);
+
+    // First corner
+    vec3 i  = floor(v + dot(v, C.yyy) );
+    vec3 x0 =   v - i + dot(i, C.xxx) ;
+
+    // Other corners
+    vec3 g = step(x0.yzx, x0.xyz);
+    vec3 l = 1.0 - g;
+    vec3 i1 = min( g.xyz, l.zxy );
+    vec3 i2 = max( g.xyz, l.zxy );
+
+    //   x0 = x0 - 0.0 + 0.0 * C.xxx;
+    //   x1 = x0 - i1  + 1.0 * C.xxx;
+    //   x2 = x0 - i2  + 2.0 * C.xxx;
+    //   x3 = x0 - 1.0 + 3.0 * C.xxx;
+    vec3 x1 = x0 - i1 + C.xxx;
+    vec3 x2 = x0 - i2 + C.yyy; // 2.0*C.x = 1/3 = C.y
+    vec3 x3 = x0 - D.yyy;      // -1.0+3.0*C.x = -0.5 = -D.y
+
+    // Permutations
+    i = mod289(i);
+    vec4 p = permute( permute( permute(
+                i.z + vec4(0.0, i1.z, i2.z, 1.0 ))
+            + i.y + vec4(0.0, i1.y, i2.y, 1.0 ))
+            + i.x + vec4(0.0, i1.x, i2.x, 1.0 ));
+
+    // Gradients: 7x7 points over a square, mapped onto an octahedron.
+    // The ring size 17*17 = 289 is close to a multiple of 49 (49*6 = 294)
+    float n_ = 0.142857142857; // 1.0/7.0
+    vec3  ns = n_ * D.wyz - D.xzx;
+
+    vec4 j = p - 49.0 * floor(p * ns.z * ns.z);  //  mod(p,7*7)
+
+    vec4 x_ = floor(j * ns.z);
+    vec4 y_ = floor(j - 7.0 * x_ );    // mod(j,N)
+
+    vec4 x = x_ *ns.x + ns.yyyy;
+    vec4 y = y_ *ns.x + ns.yyyy;
+    vec4 h = 1.0 - abs(x) - abs(y);
+
+    vec4 b0 = vec4( x.xy, y.xy );
+    vec4 b1 = vec4( x.zw, y.zw );
+
+    //vec4 s0 = vec4(lessThan(b0,0.0))*2.0 - 1.0;
+    //vec4 s1 = vec4(lessThan(b1,0.0))*2.0 - 1.0;
+    vec4 s0 = floor(b0)*2.0 + 1.0;
+    vec4 s1 = floor(b1)*2.0 + 1.0;
+    vec4 sh = -step(h, vec4(0.0));
+
+    vec4 a0 = b0.xzyw + s0.xzyw*sh.xxyy ;
+    vec4 a1 = b1.xzyw + s1.xzyw*sh.zzww ;
+
+    vec3 p0 = vec3(a0.xy,h.x);
+    vec3 p1 = vec3(a0.zw,h.y);
+    vec3 p2 = vec3(a1.xy,h.z);
+    vec3 p3 = vec3(a1.zw,h.w);
+
+    //Normalise gradients
+    vec4 norm = taylorInvSqrt(vec4(dot(p0,p0), dot(p1,p1), dot(p2, p2), dot(p3,p3)));
+    p0 *= norm.x;
+    p1 *= norm.y;
+    p2 *= norm.z;
+    p3 *= norm.w;
+
+    // Mix final noise value
+    vec4 m = max(0.6 - vec4(dot(x0,x0), dot(x1,x1), dot(x2,x2), dot(x3,x3)), 0.0);
+    m = m * m;
+    return 42.0 * dot( m*m, vec4( dot(p0,x0), dot(p1,x1),
+                                dot(p2,x2), dot(p3,x3) ) );
+}
+
+float snoise(in vec4 v) {
+    const vec4  C = vec4( 0.138196601125011,  // (5 - sqrt(5))/20  G4
+                        0.276393202250021,  // 2 * G4
+                        0.414589803375032,  // 3 * G4
+                        -0.447213595499958); // -1 + 4 * G4
+
+    // First corner
+    vec4 i  = floor(v + dot(v, vec4(.309016994374947451)) ); // (sqrt(5) - 1)/4
+    vec4 x0 = v -   i + dot(i, C.xxxx);
+
+    // Other corners
+
+    // Rank sorting originally contributed by Bill Licea-Kane, AMD (formerly ATI)
+    vec4 i0;
+    vec3 isX = step( x0.yzw, x0.xxx );
+    vec3 isYZ = step( x0.zww, x0.yyz );
+    //  i0.x = dot( isX, vec3( 1.0 ) );
+    i0.x = isX.x + isX.y + isX.z;
+    i0.yzw = 1.0 - isX;
+    //  i0.y += dot( isYZ.xy, vec2( 1.0 ) );
+    i0.y += isYZ.x + isYZ.y;
+    i0.zw += 1.0 - isYZ.xy;
+    i0.z += isYZ.z;
+    i0.w += 1.0 - isYZ.z;
+
+    // i0 now contains the unique values 0,1,2,3 in each channel
+    vec4 i3 = clamp( i0, 0.0, 1.0 );
+    vec4 i2 = clamp( i0-1.0, 0.0, 1.0 );
+    vec4 i1 = clamp( i0-2.0, 0.0, 1.0 );
+
+    //  x0 = x0 - 0.0 + 0.0 * C.xxxx
+    //  x1 = x0 - i1  + 1.0 * C.xxxx
+    //  x2 = x0 - i2  + 2.0 * C.xxxx
+    //  x3 = x0 - i3  + 3.0 * C.xxxx
+    //  x4 = x0 - 1.0 + 4.0 * C.xxxx
+    vec4 x1 = x0 - i1 + C.xxxx;
+    vec4 x2 = x0 - i2 + C.yyyy;
+    vec4 x3 = x0 - i3 + C.zzzz;
+    vec4 x4 = x0 + C.wwww;
+
+    // Permutations
+    i = mod289(i);
+    float j0 = permute( permute( permute( permute(i.w) + i.z) + i.y) + i.x);
+    vec4 j1 = permute( permute( permute( permute (
+                i.w + vec4(i1.w, i2.w, i3.w, 1.0 ))
+            + i.z + vec4(i1.z, i2.z, i3.z, 1.0 ))
+            + i.y + vec4(i1.y, i2.y, i3.y, 1.0 ))
+            + i.x + vec4(i1.x, i2.x, i3.x, 1.0 ));
+
+    // Gradients: 7x7x6 points over a cube, mapped onto a 4-cross polytope
+    // 7*7*6 = 294, which is close to the ring size 17*17 = 289.
+    vec4 ip = vec4(1.0/294.0, 1.0/49.0, 1.0/7.0, 0.0) ;
+
+    vec4 p0 = grad4(j0,   ip);
+    vec4 p1 = grad4(j1.x, ip);
+    vec4 p2 = grad4(j1.y, ip);
+    vec4 p3 = grad4(j1.z, ip);
+    vec4 p4 = grad4(j1.w, ip);
+
+    // Normalise gradients
+    vec4 norm = taylorInvSqrt(vec4(dot(p0,p0), dot(p1,p1), dot(p2, p2), dot(p3,p3)));
+    p0 *= norm.x;
+    p1 *= norm.y;
+    p2 *= norm.z;
+    p3 *= norm.w;
+    p4 *= taylorInvSqrt(dot(p4,p4));
+
+    // Mix contributions from the five corners
+    vec3 m0 = max(0.6 - vec3(dot(x0,x0), dot(x1,x1), dot(x2,x2)), 0.0);
+    vec2 m1 = max(0.6 - vec2(dot(x3,x3), dot(x4,x4)            ), 0.0);
+    m0 = m0 * m0;
+    m1 = m1 * m1;
+    return 49.0 * ( dot(m0*m0, vec3( dot( p0, x0 ), dot( p1, x1 ), dot( p2, x2 )))
+                + dot(m1*m1, vec2( dot( p3, x3 ), dot( p4, x4 ) ) ) ) ;
+}
+
+vec2 snoise2( vec2 x ){
+    float s  = snoise(vec2( x ));
+    float s1 = snoise(vec2( x.y - 19.1, x.x + 47.2 ));
+    return vec2( s , s1 );
+}
+
+vec3 snoise3( vec3 x ){
+    float s  = snoise(vec3( x ));
+    float s1 = snoise(vec3( x.y - 19.1 , x.z + 33.4 , x.x + 47.2 ));
+    float s2 = snoise(vec3( x.z + 74.2 , x.x - 124.5 , x.y + 99.4 ));
+    return vec3( s , s1 , s2 );
+}
+
+vec3 snoise3( vec4 x ){
+    float s  = snoise(vec4( x ));
+    float s1 = snoise(vec4( x.y - 19.1 , x.z + 33.4 , x.x + 47.2, x.w ));
+    float s2 = snoise(vec4( x.z + 74.2 , x.x - 124.5 , x.y + 99.4, x.w ));
+    return vec3( s , s1 , s2 );
+}
+
+#endif
+
+
+void mainImage(out vec4 fragColor, in vec2 fragCoord) {
+    vec2 uv = fragCoord / iResolution.xy;
+    uv.x *= iResolution.x / iResolution.y;
+    vec4 col = vec4(vec3(0.), 1.);
+
+    float speed = .1;
+    float offset = iTime * speed;
+    vec2 sNoiseUV = vec2(snoise((uv * 3.) + offset), uv.y);
+    vec3 colSNoise = vec3(0.);
+
+    colSNoise.r = fbm(sNoiseUV * .333 + offset);
+    colSNoise.g = fbm(sNoiseUV * .666 + offset);
+    colSNoise.b = fbm(sNoiseUV * .999 + offset);
+    col.rgb = colSNoise;
+
+    sNoiseUV = vec2(snoise((uv * 3.) + offset * 2.), uv.y);
+    colSNoise.r = fbm(sNoiseUV.yx * .999 + offset);
+    colSNoise.g = fbm(sNoiseUV.yx * .666 + offset);
+    colSNoise.b = fbm(sNoiseUV.yx * .333 + offset);
+
+    col.rgb = mix(col.rgb, colSNoise, 0.5) * 1.3;
+
+    fragColor = col;
+}
+
+void main() {
+    vec2 fragCoord = gl_FragCoord.xy;
+    mainImage(gl_FragColor, fragCoord);
+}
+</script>
+
+<!-- FlyControls -->
+
+<script type="text/javascript">
+    let vscode = undefined;
+    if (typeof acquireVsCodeApi === 'function') {
+        vscode = acquireVsCodeApi();
+    }
+    var compileTimePanel;
+
+    let revealError = function (line, file) {
+        if (vscode) {
+            vscode.postMessage({
+                command: 'showGlslsError',
+                line: line,
+                file: file
+            });
+        }
+    };
+
+    let currentShader = {};
+    // Error Callback
+    console.error = function () {
+        if ('7' in arguments) {
+            let errorRegex = /ERROR: \d+:(\d+):\W(.*)\n/g;
+            let rawErrors = arguments[7];
+            let match;
+
+            let diagnostics = [];
+            let message = '';
+            while (match = errorRegex.exec(rawErrors)) {
+                let lineNumber = Number(match[1]) - currentShader.LineOffset;
+                let error = match[2];
+                diagnostics.push({
+                    line: lineNumber,
+                    message: error
+                });
+                let lineHighlight = `<a class='error' unselectable onclick='revealError(${lineNumber}, "${currentShader.File}")'>Line ${lineNumber}</a>`;
+                message += `<li>${lineHighlight}: ${error}</li>`;
+            }
+            console.log(message);
+            let diagnosticBatch = {
+                filename: currentShader.File,
+                diagnostics: diagnostics
+            };
+            if (vscode !== undefined) {
+                vscode.postMessage({
+                    command: 'showGlslDiagnostic',
+                    type: 'error',
+                    diagnosticBatch: diagnosticBatch
+                });
+            }
+
+            $('#message').append(`<h3>Shader failed to compile - ${currentShader.Name} </h3>`);
+            $('#message').append('<ul>');
+            $('#message').append(message);
+            $('#message').append('</ul>');
+        }
+    };
+
+    // Development feature: Output warnings from third-party libraries
+    // console.warn = function (message) {
+    //     $("#message").append(message + '<br>');
+    // };
+
+    let clock = new THREE.Clock();
+    let pausedTime = 0.0;
+    let deltaTime = 0.0;
+    let startingTime = 8.362099999997744;
+    let time = startingTime;
+
+    let date = new THREE.Vector4();
+
+    let updateDate = function () {
+        let today = new Date();
+        date.x = today.getFullYear();
+        date.y = today.getMonth();
+        date.z = today.getDate();
+        date.w = today.getHours() * 60 * 60
+            + today.getMinutes() * 60
+            + today.getSeconds()
+            + today.getMilliseconds() * 0.001;
+    };
+    updateDate();
+
+    let paused = false;
+    let forceRenderOneFrame = paused;
+    let pauseButton = document.getElementById('pause-button');
+    if (pauseButton) {
+        pauseButton.checked = paused;
+        pauseButton.onclick = function () {
+            paused = pauseButton.checked;
+            if (!paused) {
+                // Audio Resume
+                pausedTime += clock.getDelta();
+            }
+            else {
+                // Audio Pause
+            }
+
+            if (vscode !== undefined) {
+                vscode.postMessage({
+                    command: 'setPause',
+                    paused: paused
+                });
+            }
+        };
+    }
+
+    {
+        let screenshotButton = document.getElementById("screenshot");
+        if (screenshotButton) {
+            screenshotButton.addEventListener('click', saveScreenshot);
+        }
+    }
+
+    {
+        let recordButton = document.getElementById("record");
+        if (recordButton) {
+            recordButton.addEventListener('click', recordAction);
+        }
+    }
+
+    {
+        let reloadButton = document.getElementById("reload");
+        if (reloadButton) {
+            reloadButton.addEventListener('click', reloadWebview);
+        }
+    }
+
+    window.addEventListener('message', event => {
+        const message = event.data; // The JSON data our extension sent
+        switch (message.command) {
+            case 'pause':
+                if (pauseButton) {
+                    pauseButton.checked = !pauseButton.checked;
+                }
+                paused = !paused;
+                if (!paused) {
+                    // Audio Resume
+                    pausedTime += clock.getDelta();
+                }
+                else {
+                    // Audio Pause
+                }
+
+                if (vscode !== undefined) {
+                    vscode.postMessage({
+                        command: 'setPause',
+                        paused: paused
+                    });
+                }
+                break;
+            case 'screenshot':
+                saveScreenshot();
+                break;
+        }
+    });
+
+    let canvas = document.getElementById('canvas');
+    let gl = canvas.getContext('webgl2');
+    let isWebGL2 = gl != null;
+    if (gl == null) gl = canvas.getContext('webgl');
+    let supportsFloatFramebuffer = (gl.getExtension('EXT_color_buffer_float') != null) || (gl.getExtension('WEBGL_color_buffer_float') != null);
+    let supportsHalfFloatFramebuffer = (gl.getExtension('EXT_color_buffer_half_float') != null);
+    let framebufferType = THREE.UnsignedByteType;
+    if (supportsFloatFramebuffer) framebufferType = THREE.FloatType;
+    else if (supportsHalfFloatFramebuffer) framebufferType = THREE.HalfFloatType;
+
+    let renderer = new THREE.WebGLRenderer({ canvas: canvas, antialias: true, context: gl, preserveDrawingBuffer: true });
+    let resolution = forceAspectRatio(window.innerWidth, window.innerHeight);
+    let mouse = new THREE.Vector4(-1, -1, -1, -1);
+    let mouseButton = new THREE.Vector4(0, 0, 0, 0);
+    let normalizedMouse = new THREE.Vector2(0.10975609756097561, 0.3627760252365931);
+    let frameCounter = 0;
+    let recorder = null;
+
+    // Audio Init
+    const audioContext = {
+        sampleRate: 0
+    };
+    // Audio Resume
+
+    let buffers = [];
+    // Buffers
+    buffers.push({
+        Name: 'd:/Github/MyShaders/Halucinetics/main.frag',
+        File: 'd:/Github/MyShaders/Halucinetics/main.frag',
+        LineOffset: 1200,
+        Target: null,
+        ChannelResolution: Array(10).fill(new THREE.Vector3(0, 0, 0)),
+        PingPongTarget: null,
+        PingPongChannel: 0,
+        Dependents: [],
+        Shader: new THREE.ShaderMaterial({
+            fragmentShader: document.getElementById('d:/Github/MyShaders/Halucinetics/main.frag').textContent,
+            depthWrite: false,
+            depthTest: false,
+            uniforms: {
+                iResolution: { type: 'v3', value: resolution },
+                iTime: { type: 'f', value: 0.0 },
+                iTimeDelta: { type: 'f', value: 0.0 },
+                iFrame: { type: 'i', value: 0 },
+                iMouse: { type: 'v4', value: mouse },
+                iMouseButton: { type: 'v2', value: mouseButton },
+                iViewMatrix: { type: 'm44', value: new THREE.Matrix4() },
+                iChannelResolution: { type: 'v3v', value: Array(10).fill(new THREE.Vector3(0, 0, 0)) },
+
+                iDate: { type: 'v4', value: date },
+                iSampleRate: { type: 'f', value: audioContext.sampleRate },
+
+                iChannel0: { type: 't' },
+                iChannel1: { type: 't' },
+                iChannel2: { type: 't' },
+                iChannel3: { type: 't' },
+                iChannel4: { type: 't' },
+                iChannel5: { type: 't' },
+                iChannel6: { type: 't' },
+                iChannel7: { type: 't' },
+                iChannel8: { type: 't' },
+                iChannel9: { type: 't' },
+
+                resolution: { type: 'v2', value: resolution },
+                time: { type: 'f', value: 0.0 },
+                mouse: { type: 'v2', value: normalizedMouse },
+            }
+        })
+    });
+    let commonIncludes = [];
+    // Includes
+    commonIncludes.push({
+        Name: 'd:/Github/MyShaders/lygia/math/mod289.glsl',
+        File: 'd:/Github/MyShaders/lygia/math/mod289.glsl'
+    }); commonIncludes.push({
+        Name: 'd:/Github/MyShaders/lygia/math/permute.glsl',
+        File: 'd:/Github/MyShaders/lygia/math/permute.glsl'
+    }); commonIncludes.push({
+        Name: 'd:/Github/MyShaders/lygia/math/taylorInvSqrt.glsl',
+        File: 'd:/Github/MyShaders/lygia/math/taylorInvSqrt.glsl'
+    }); commonIncludes.push({
+        Name: 'd:/Github/MyShaders/lygia/math/grad4.glsl',
+        File: 'd:/Github/MyShaders/lygia/math/grad4.glsl'
+    }); commonIncludes.push({
+        Name: 'd:/Github/MyShaders/lygia/generative/snoise.glsl',
+        File: 'd:/Github/MyShaders/lygia/generative/snoise.glsl'
+    }); commonIncludes.push({
+        Name: 'd:/Github/MyShaders/lygia/generative/random.glsl',
+        File: 'd:/Github/MyShaders/lygia/generative/random.glsl'
+    }); commonIncludes.push({
+        Name: 'd:/Github/MyShaders/lygia/generative/srandom.glsl',
+        File: 'd:/Github/MyShaders/lygia/generative/srandom.glsl'
+    }); commonIncludes.push({
+        Name: 'd:/Github/MyShaders/lygia/math/cubic.glsl',
+        File: 'd:/Github/MyShaders/lygia/math/cubic.glsl'
+    }); commonIncludes.push({
+        Name: 'd:/Github/MyShaders/lygia/math/quintic.glsl',
+        File: 'd:/Github/MyShaders/lygia/math/quintic.glsl'
+    }); commonIncludes.push({
+        Name: 'd:/Github/MyShaders/lygia/generative/gnoise.glsl',
+        File: 'd:/Github/MyShaders/lygia/generative/gnoise.glsl'
+    }); commonIncludes.push({
+        Name: 'd:/Github/MyShaders/lygia/generative/fbm.glsl',
+        File: 'd:/Github/MyShaders/lygia/generative/fbm.glsl'
+    });
+
+    // WebGL2 inserts more lines into the shader
+    if (isWebGL2) {
+        for (let buffer of buffers) {
+            buffer.LineOffset += 16;
+        }
+    }
+
+    // Keyboard Init
+
+    // Uniforms Init
+    // Uniforms Update
+
+    let texLoader = new THREE.TextureLoader();
+    // Texture Init
+
+
+    let scene = new THREE.Scene();
+    let quad = new THREE.Mesh(
+        new THREE.PlaneGeometry(resolution.x, resolution.y),
+        null
+    );
+    scene.add(quad);
+
+    let controlState = new THREE.Camera();
+    controlState.position.set(0, 0, 0);
+    controlState.quaternion.set(0, 0, 0, 1);
+    scene.add(controlState);
+
+    let flyControls = undefined;
+    if (typeof FlyControls === 'function') {
+        flyControls = new FlyControls(controlState, renderer.domElement, vscode);
+        flyControls.movementSpeed = 1;
+        flyControls.domElement = renderer.domElement;
+        flyControls.rollSpeed = Math.PI / 24;
+        flyControls.autoForward = false;
+        flyControls.dragToLook = true;
+    }
+
+    let camera = new THREE.OrthographicCamera(-resolution.x / 2.0, resolution.x / 2.0, resolution.y / 2.0, -resolution.y / 2.0, 1, 1000);
+    camera.position.set(0, 0, 10);
+
+    // Run every shader once to check for compile errors
+    let compileTimeStart = performance.now();
+    let failed = 0;
+    for (let include of commonIncludes) {
+        currentShader = {
+            Name: include.Name,
+            File: include.File,
+            // add two for version and precision lines
+            LineOffset: 27 + 2
+        };
+        // Test Compile Included Files
+        // bail if there is an error found in the include script
+        if (compileFragShader(gl, document.getElementById(include.Name).textContent) == false) {
+            throw Error(`Failed to compile ${include.Name}`);
+        }
+    }
+
+    for (let buffer of buffers) {
+        currentShader = {
+            Name: buffer.Name,
+            File: buffer.File,
+            LineOffset: buffer.LineOffset
+        };
+        quad.material = buffer.Shader;
+        renderer.setRenderTarget(buffer.Target);
+        renderer.render(scene, camera);
+    }
+    currentShader = {};
+    let compileTimeEnd = performance.now();
+    let compileTime = compileTimeEnd - compileTimeStart;
+    if (compileTimePanel !== undefined) {
+        for (let i = 0; i < 200; i++) {
+            compileTimePanel.update(compileTime, 200);
+        }
+    }
+
+    computeSize();
+    render();
+
+    function addLineNumbers(string) {
+        let lines = string.split('\\n');
+        for (let i = 0; i < lines.length; i++) {
+            lines[i] = (i + 1) + ': ' + lines[i];
+        }
+        return lines.join('\\n');
+    }
+
+    function compileFragShader(gl, fsSource) {
+        const fs = gl.createShader(gl.FRAGMENT_SHADER);
+        gl.shaderSource(fs, fsSource);
+        gl.compileShader(fs);
+        if (!gl.getShaderParameter(fs, gl.COMPILE_STATUS)) {
+            const fragmentLog = gl.getShaderInfoLog(fs);
+            console.error('THREE.WebGLProgram: shader error: ', gl.getError(), 'gl.COMPILE_STATUS', null, null, null, null, fragmentLog);
+            return false;
+        }
+        return true;
+    }
+
+    function render() {
+        requestAnimationFrame(render);
+        if (!forceRenderOneFrame) {
+            // Pause Whole Render
+            if (paused) return;
+        }
+        forceRenderOneFrame = false;
+
+        // Advance Time
+        deltaTime = clock.getDelta();
+        time = startingTime + clock.getElapsedTime() - pausedTime;
+        if (vscode !== undefined) {
+            vscode.postMessage({
+                command: 'updateTime',
+                time: time
+            });
+        }
+        updateDate();
+
+        if (flyControls) {
+            flyControls.update(0.1);
+        }
+
+        // Audio Update
+
+        for (let buffer of buffers) {
+            buffer.Shader.uniforms['iResolution'].value = resolution;
+            buffer.Shader.uniforms['iTimeDelta'].value = deltaTime;
+            buffer.Shader.uniforms['iTime'].value = time;
+            buffer.Shader.uniforms['iFrame'].value = frameCounter;
+            buffer.Shader.uniforms['iMouse'].value = mouse;
+            buffer.Shader.uniforms['iMouseButton'].value = mouseButton;
+
+            buffer.Shader.uniforms['iViewMatrix'].value = controlState.matrixWorld;
+
+            buffer.Shader.uniforms['resolution'].value = resolution;
+            buffer.Shader.uniforms['time'].value = time;
+            buffer.Shader.uniforms['mouse'].value = normalizedMouse;
+
+            quad.material = buffer.Shader;
+            renderer.setRenderTarget(buffer.Target);
+            renderer.render(scene, camera);
+        }
+
+        // Uniforms Update
+
+        // Keyboard Update
+
+        if (mouse.w > 0.0) {
+            mouse.w = -mouse.w;
+            updateMouse();
+        }
+
+        for (let buffer of buffers) {
+            if (buffer.PingPongTarget) {
+                [buffer.PingPongTarget, buffer.Target] = [buffer.Target, buffer.PingPongTarget];
+                buffer.Shader.uniforms[`iChannel${buffer.PingPongChannel}`].value = buffer.PingPongTarget.texture;
+                for (let dependent of buffer.Dependents) {
+                    const dependentBuffer = buffers[dependent.Index];
+                    dependentBuffer.Shader.uniforms[`iChannel${dependent.Channel}`].value = buffer.Target.texture;
+                }
+            }
+        }
+
+        frameCounter++;
+    }
+    function forceAspectRatio(width, height) {
+        // Forced aspect ratio
+        let forcedAspects = [0, 0];
+        let forcedAspectRatio = forcedAspects[0] / forcedAspects[1];
+        let aspectRatio = width / height;
+
+        if (forcedAspectRatio <= 0 || !isFinite(forcedAspectRatio)) {
+            let resolution = new THREE.Vector3(width, height, 1.0);
+            return resolution;
+        }
+        else if (aspectRatio < forcedAspectRatio) {
+            let resolution = new THREE.Vector3(width, Math.floor(width / forcedAspectRatio), 1);
+            return resolution;
+        }
+        else {
+            let resolution = new THREE.Vector3(Math.floor(height * forcedAspectRatio), height, 1);
+            return resolution;
+        }
+    }
+    function computeSize() {
+
+        // Compute forced aspect ratio and align canvas
+        resolution = forceAspectRatio(window.innerWidth, window.innerHeight);
+        canvas.style.left = `${(window.innerWidth - resolution.x) / 2}px`;
+        canvas.style.top = `${(window.innerHeight - resolution.y) / 2}px`;
+
+        for (let buffer of buffers) {
+            if (buffer.Target) {
+                buffer.Target.setSize(resolution.x, resolution.y);
+            }
+            if (buffer.PingPongTarget) {
+                buffer.PingPongTarget.setSize(resolution.x, resolution.y);
+            }
+        }
+        renderer.setSize(resolution.x, resolution.y, false);
+
+        // Update Camera and Mesh
+        quad.geometry = new THREE.PlaneGeometry(resolution.x, resolution.y);
+        camera.left = -resolution.x / 2.0;
+        camera.right = resolution.x / 2.0;
+        camera.top = resolution.y / 2.0;
+        camera.bottom = -resolution.y / 2.0;
+        camera.updateProjectionMatrix();
+
+        // Reset iFrame on resize for shaders that rely on first-frame setups
+        frameCounter = 0;
+    }
+    function saveScreenshot() {
+        let doSaveScreenshot = () => {
+            renderer.domElement.toBlob(function (blob) {
+                let a = document.createElement('a');
+                let url = URL.createObjectURL(blob);
+                a.href = url;
+                a.download = 'shadertoy.png';
+                a.click();
+            }, 'image/png', 1.0);
+        };
+
+        let forcedScreenshotResolution = [0, 0];
+        if (forcedScreenshotResolution[0] <= 0 || forcedScreenshotResolution[1] <= 0) {
+            renderer.render(scene, camera);
+            doSaveScreenshot();
+        }
+        else {
+            renderer.setSize(forcedScreenshotResolution[0], forcedScreenshotResolution[1], false);
+
+            for (let buffer of buffers) {
+                buffer.Shader.uniforms['iResolution'].value = new THREE.Vector3(forcedScreenshotResolution[0], forcedScreenshotResolution[1], 1);
+                buffer.Shader.uniforms['resolution'].value = new THREE.Vector3(forcedScreenshotResolution[0], forcedScreenshotResolution[1], 1);
+
+                quad.material = buffer.Shader;
+                renderer.setRenderTarget(buffer.Target);
+                renderer.render(scene, camera);
+            }
+
+            doSaveScreenshot();
+            renderer.setSize(resolution.x, resolution.y, false);
+        }
+    }
+    function recordAction() {
+        let recordButton = document.getElementById("record");
+        if (recorder == null) {
+            recordButton.classList.add('recording');
+
+            let stream = canvas.captureStream(30);
+            let recorderOptions = {
+                mimeType: "video/webm"
+            };
+            recorder = new MediaRecorder(stream, recorderOptions);
+            recorder.start();
+            recorder.ondataavailable = function (evt) {
+                let a = document.createElement('a');
+                let url = URL.createObjectURL(evt.data);
+                a.href = url;
+                a.download = 'shadertoy.webm';
+                a.click();
+            };
+        }
+        else {
+            recordButton.classList.remove('recording');
+
+            recorder.stop();
+            recorder = null;
+        }
+    }
+    function reloadWebview() {
+        if (vscode !== undefined) {
+            vscode.postMessage({ command: 'reloadWebview' });
+        }
+    }
+    function updateMouse() {
+        if (vscode !== undefined) {
+            vscode.postMessage({
+                command: 'updateMouse',
+                mouse: {
+                    x: mouse.x,
+                    y: mouse.y,
+                    z: mouse.z,
+                    w: mouse.w
+                },
+                normalizedMouse: {
+                    x: normalizedMouse.x,
+                    y: normalizedMouse.y
+                }
+            });
+        }
+    }
+    let dragging = false;
+    function updateNormalizedMouseCoordinates(clientX, clientY) {
+        let rect = canvas.getBoundingClientRect();
+        let mouseX = clientX - rect.left;
+        let mouseY = resolution.y - clientY - rect.top;
+
+        if (mouseButton.x + mouseButton.y != 0) {
+            mouse.x = mouseX;
+            mouse.y = mouseY;
+        }
+
+        normalizedMouse.x = mouseX / resolution.x;
+        normalizedMouse.y = mouseY / resolution.y;
+    }
+    canvas.addEventListener('mousemove', function (evt) {
+        updateNormalizedMouseCoordinates(evt.clientX, evt.clientY);
+        updateMouse();
+    }, false);
+    canvas.addEventListener('mousedown', function (evt) {
+        if (evt.button == 0)
+            mouseButton.x = 1;
+        if (evt.button == 2)
+            mouseButton.y = 1;
+
+        if (!dragging) {
+            updateNormalizedMouseCoordinates(evt.clientX, evt.clientY);
+            mouse.z = mouse.x;
+            mouse.w = mouse.y;
+            dragging = true
+        }
+
+        updateMouse();
+    }, false);
+    canvas.addEventListener('mouseup', function (evt) {
+        if (evt.button == 0)
+            mouseButton.x = 0;
+        if (evt.button == 2)
+            mouseButton.y = 0;
+
+        dragging = false;
+        mouse.z = -mouse.z;
+        mouse.w = -mouse.w;
+
+        updateMouse();
+    }, false);
+    window.addEventListener('resize', function () {
+        computeSize();
+    });
+
+    // Keyboard Callbacks
+</script>
